@@ -69,8 +69,8 @@ describe('withLoader', () => {
     expect(hideLoader).toHaveBeenCalledTimes(1)
   })
 
-  it('il minimo è di 2 secondi', () => {
-    expect(LOADER_MIN_MS).toBe(2000)
+  it('il minimo è di un secondo e mezzo', () => {
+    expect(LOADER_MIN_MS).toBe(1500)
   })
 
   it('se la chiamata fallisce il loader si chiude subito, senza attendere il minimo', async () => {
@@ -103,18 +103,18 @@ describe('withLoader', () => {
   })
 
   it('se parte un\'altra chiamata durante l\'attesa il loader resta', async () => {
-    await withLoader(async () => 'prima') // nasconderebbe il loader a t = 2000
+    await withLoader(async () => 'prima') // nasconderebbe il loader a t = 1500
     await vi.advanceTimersByTimeAsync(300)
 
     const second = withLoader(async () => {
       await new Promise((resolve) => setTimeout(resolve, 5000))
     })
 
-    // a t = 2300 è scaduta l'attesa della prima chiamata, ma la seconda è ancora in corso
+    // a t = 1800 è scaduta l'attesa della prima chiamata, ma la seconda è ancora in corso
     await vi.advanceTimersByTimeAsync(LOADER_MIN_MS)
     expect(hideLoader).not.toHaveBeenCalled()
 
-    await vi.advanceTimersByTimeAsync(3000)
+    await vi.advanceTimersByTimeAsync(4000)
     await second
     expect(hideLoader).toHaveBeenCalledTimes(1)
   })

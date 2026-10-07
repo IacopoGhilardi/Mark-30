@@ -1,6 +1,6 @@
 // Tempo minimo in cui il loader resta visibile: senza, una chiamata veloce
 // (per esempio in locale) lo farebbe lampeggiare o non comparire affatto.
-export const LOADER_MIN_MS = 2000
+export const LOADER_MIN_MS = 1500
 
 export type LoaderOptions = {
   // durata minima di visibilità in millisecondi (0 per disattivarla)
