@@ -54,6 +54,15 @@ function positionLabel(position: number) {
   return String(position).padStart(2, '0')
 }
 
+// Se si arriva dal gioco (?team=N) compaiono "torna alla missione" e l'evidenza della propria squadra
+const route = useRoute()
+
+const myTeamId = computed(() => {
+  const id = Number(route.query.team)
+
+  return teams.some((team) => team.id === id) ? id : null
+})
+
 useHead({
   title: "Live Leaderboard — Marco's 30th",
 })
@@ -97,6 +106,7 @@ useHead({
           :class="{
             leader: item.position === 1,
             podium: item.position <= 3,
+            mine: item.id === myTeamId,
           }"
         >
           <div class="position">
@@ -106,6 +116,13 @@ useHead({
           <div class="team-info">
             <div class="team-line">
               <h2>{{ item.name }}</h2>
+
+              <span
+                v-if="item.id === myTeamId"
+                class="you-badge"
+              >
+                VOI
+              </span>
 
               <span
                 v-if="item.position === 1"
@@ -174,6 +191,15 @@ useHead({
           30 ANNI. 9 SQUADRE. UNA SOLA SERATA.
         </p>
       </footer>
+
+      <NuxtLink
+        v-if="myTeamId"
+        :to="`/play/${myTeamId}/game`"
+        class="back-to-mission"
+      >
+        <span>←</span>
+        <span>TORNA ALLA MISSIONE</span>
+      </NuxtLink>
     </section>
   </main>
 </template>
@@ -473,6 +499,46 @@ footer {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+.team-row.mine {
+  background: rgba(255, 255, 255, 0.07);
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.you-badge {
+  padding: 3px 7px;
+
+  border: 1px solid #f4f4f0;
+  border-radius: 999px;
+
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+}
+
+/* in fondo allo schermo, a portata di pollice */
+.back-to-mission {
+  position: sticky;
+  bottom: 14px;
+  z-index: 5;
+
+  margin-top: 18px;
+  min-height: 56px;
+  padding: 0 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  background: #f4f4f0;
+  color: #090909;
+  text-decoration: none;
+
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
 }
 
 @media (min-width: 700px) {

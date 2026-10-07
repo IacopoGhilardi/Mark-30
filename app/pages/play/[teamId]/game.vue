@@ -662,7 +662,7 @@ useHead({
       </div>
 
       <NuxtLink
-        to="/classifica"
+        :to="{ path: '/classifica', query: { team: teamId } }"
         class="leaderboard-link"
       >
         <span>
@@ -701,7 +701,7 @@ useHead({
 
       <NuxtLink
         v-if="!showGameIntro"
-        to="/classifica"
+        :to="{ path: '/classifica', query: { team: teamId } }"
         class="leaderboard-link"
       >
         <span>

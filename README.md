@@ -101,7 +101,9 @@ della chiamata. Non usarlo per il polling della classifica.
   davvero (`SKIP_AFTER_CLICKS` in `game.vue`). Finite le missioni nuove la squadra può riprenderne
   una scartata (a scelta o a caso).
 - Video: si controllano durata (max 10 s) e peso (max 20 MB) prima dell'upload.
-- `classifica.vue`: `getLeaderboard()` ogni 5 secondi, con loader solo al primo caricamento.
+- `classifica.vue`: `getLeaderboard()` ogni 5 secondi, con loader solo al primo caricamento. Dal gioco il
+  link porta `?team=N`: la classifica evidenzia la squadra ("VOI") e mostra in basso
+  "TORNA ALLA MISSIONE". Aperta senza parametro (proiettore, tablet) è la classifica pubblica e basta.
 
 ## Setup
 
