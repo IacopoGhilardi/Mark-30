@@ -11,6 +11,34 @@ const team = computed(() => {
   return teams.find((item) => item.id === teamId.value)
 })
 
+// Una squadra che ha già iniziato (missione attiva, completate o scartate) va
+// diretta al gioco: la pagina d'ingresso serve solo la prima volta.
+const checking = ref(true)
+
+onMounted(async () => {
+  if (!team.value) {
+    checking.value = false
+    return
+  }
+
+  try {
+    const state = await withLoader(
+      () => getTeamState(teamId.value),
+      'CARICAMENTO...',
+      { minMs: 0 }
+    )
+
+    if (hasStartedGame(state)) {
+      await navigateTo(`/play/${teamId.value}/game`, { replace: true })
+      return
+    }
+  } catch {
+    // rete assente o backend non raggiungibile: si resta sulla pagina d'ingresso
+  }
+
+  checking.value = false
+})
+
 useHead({
   title: computed(() =>
     team.value
@@ -22,7 +50,7 @@ useHead({
 
 <template>
   <main class="game-phone-page">
-    <section v-if="team" class="game-phone">
+    <section v-if="team && !checking" class="game-phone">
       <header class="brand">
         <p class="brand-title">MARCO'S 30TH</p>
         <p class="brand-subtitle">THE BIRTHDAY GAMES</p>
@@ -86,7 +114,7 @@ useHead({
       </footer>
     </section>
 
-    <section v-else class="not-found">
+    <section v-else-if="!team" class="not-found">
       <p class="error-number">404</p>
 
       <h1>
