@@ -124,8 +124,14 @@ La chiave `service_role` non va mai messa nel frontend.
 ### Sviluppo
 
 ```bash
-npm run dev        # http://localhost:3000
+npm run dev:all    # tutto in un comando, in locale
+npm run dev        # solo Nuxt (usa il Supabase del tuo .env, per esempio il cloud)
 ```
+
+`dev:all` avvia il Supabase locale (se non è già acceso), applica le migrations nuove senza
+cancellare i dati, carica i PIN di prova (`marco` = 1111, `irenegade` = 9999 da
+`supabase/seed.sql`, solo locale) e lancia Nuxt puntato al DB locale, ignorando il `.env`.
+Quando hai finito: `npm run db:stop`. Per ripartire da zero: `npm run db:reset`.
 
 ### Database locale
 

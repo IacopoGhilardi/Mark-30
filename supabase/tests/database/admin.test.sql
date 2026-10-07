@@ -4,7 +4,8 @@ select no_plan();
 
 insert into public.admin_pins (role, pin_hash) values
   ('marco',     extensions.crypt('1111', extensions.gen_salt('bf'))),
-  ('irenegade', extensions.crypt('9999', extensions.gen_salt('bf')));
+  ('irenegade', extensions.crypt('9999', extensions.gen_salt('bf')))
+on conflict (role) do update set pin_hash = excluded.pin_hash;
 
 create temp table ctx as
 select (select id from public.missions where proof_type = 'none' and active order by id limit 1) as none_id,

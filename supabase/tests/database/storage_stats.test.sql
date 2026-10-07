@@ -4,7 +4,8 @@ select no_plan();
 
 insert into public.admin_pins (role, pin_hash) values
   ('marco',     extensions.crypt('1111', extensions.gen_salt('bf'))),
-  ('irenegade', extensions.crypt('9999', extensions.gen_salt('bf')));
+  ('irenegade', extensions.crypt('9999', extensions.gen_salt('bf')))
+on conflict (role) do update set pin_hash = excluded.pin_hash;
 
 -- file: 2 foto (team 1), 1 video (team 2), 1 foto orfana (team 2)
 insert into storage.objects (bucket_id, name, metadata) values
