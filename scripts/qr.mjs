@@ -4,7 +4,8 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import QRCode from 'qrcode'
 import { teams } from '../app/datas/teams.ts'
-import { buildSheetHtml, teamUrl } from './qr-sheet.mjs'
+import { teamUrl } from '../app/utils/teamQr.ts'
+import { buildSheetHtml } from './qr-sheet.mjs'
 
 const baseUrl = process.argv[2]
 

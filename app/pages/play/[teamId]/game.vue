@@ -620,7 +620,61 @@ useHead({
 <template>
   <main class="game-page">
     <section
-      v-if="team && isReady && !loadError && (currentMission || step === 'finished')"
+      v-if="team && isReady && !loadError && playPaused"
+      class="stop-screen"
+      role="status"
+    >
+      <img
+        src="/images/vince-skip.png"
+        alt="Vince"
+        class="stop-vince"
+      >
+
+      <p class="stop-eyebrow">
+        STOP AL GIOCO
+      </p>
+
+      <h1>
+        FERMI<br>
+        TUTTI.
+      </h1>
+
+      <p class="stop-copy">
+        Il gioco è in pausa o è finito.
+        Mettete via il telefono: se riparte, lo vedrete qui.
+      </p>
+
+      <div class="stop-stats">
+        <div>
+          <span>POSIZIONE</span>
+          <strong>#{{ currentPosition ?? '-' }}</strong>
+        </div>
+
+        <div>
+          <span>PUNTI</span>
+          <strong>{{ score }}</strong>
+        </div>
+
+        <div>
+          <span>COMPLETATE</span>
+          <strong>{{ completedMissionIds.length }}</strong>
+        </div>
+      </div>
+
+      <NuxtLink
+        to="/classifica"
+        class="leaderboard-link"
+      >
+        <span>
+          VEDI LA CLASSIFICA LIVE
+        </span>
+
+        <span>↗</span>
+      </NuxtLink>
+    </section>
+
+    <section
+      v-else-if="team && isReady && !loadError && (currentMission || step === 'finished')"
       class="game-shell"
     >
       <header class="topbar">
@@ -660,15 +714,11 @@ useHead({
       <div class="separator"></div>
 
       <p
-        v-if="playPaused || missionsPaused"
+        v-if="missionsPaused"
         class="pause-banner"
         role="status"
       >
-        {{
-          playPaused
-            ? 'GIOCO IN PAUSA. ASPETTATE CHE RIPARTA.'
-            : 'NUOVE MISSIONI IN PAUSA. ASPETTATE CHE RIPARTANO.'
-        }}
+        NUOVE MISSIONI IN PAUSA. ASPETTATE CHE RIPARTANO.
       </p>
 
       <section
@@ -1891,4 +1941,82 @@ button:disabled {
   letter-spacing: 0.2em;
 }
 
+.stop-screen {
+  width: min(100%, 620px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 36px 24px 28px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 18px;
+}
+
+.stop-vince {
+  width: 92px;
+  height: 92px;
+
+  object-fit: cover;
+  border-radius: 50%;
+  background: #000;
+  border: 1px solid #333;
+}
+
+.stop-eyebrow {
+  margin: 0;
+  color: #ff7a7a;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.2em;
+}
+
+.stop-screen h1 {
+  margin: 0;
+  font-size: clamp(54px, 18vw, 92px);
+  font-weight: 950;
+  line-height: 0.88;
+  letter-spacing: -0.06em;
+}
+
+.stop-copy {
+  max-width: 380px;
+  margin: 0;
+  color: #999;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.stop-stats {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid #292929;
+  border-bottom: 1px solid #292929;
+}
+
+.stop-stats div {
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stop-stats span {
+  color: #666;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+}
+
+.stop-stats strong {
+  font-size: 26px;
+  font-weight: 950;
+}
+
+.stop-screen .leaderboard-link {
+  width: 100%;
+}
 </style>

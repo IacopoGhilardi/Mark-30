@@ -188,6 +188,13 @@ on conflict (role) do update set pin_hash = excluded.pin_hash;
   doppi), spazio per squadra e dimensione del database, con avviso dal 70% (giallo) e dal 90%
   (rosso). Il limite (1 GiB) sta in `game_settings.storage_limit_bytes`: cambialo dal SQL editor se
   passi a un piano a pagamento. L'export mostra anche il peso di ogni squadra prima dello ZIP.
+- **QR delle squadre** (solo Irene): la pagina li genera con l'indirizzo con cui è aperta (quindi
+  sul dominio di Netlify puntano già al sito giusto). Per ogni squadra: schermo intero (da far
+  inquadrare a un altro telefono), scarica SVG, copia link; e "stampa tutti". Avvisa se l'indirizzo
+  è locale. In alternativa da terminale: `npm run qr -- https://il-tuo-sito`.
+- **Stop al gioco**: con il gioco fermo le squadre vedono una schermata "STOP AL GIOCO — FERMI TUTTI"
+  con posizione, punti e link alla classifica; riparte da sola entro 10 secondi dal riavvio. Con
+  solo le nuove missioni ferme resta un avviso e si può finire quella in corso.
 - **Esportazione** (`ProofExport`): uno ZIP per squadra con file dai nomi leggibili + `prove.csv`
   (anche i testi), creato nel browser. Il download dei file usa un header `x-admin-pin` che la
   policy dello Storage verifica nel DB: **da provare con `db:start` e un upload vero prima della

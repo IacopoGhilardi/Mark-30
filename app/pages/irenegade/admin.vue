@@ -271,6 +271,11 @@ onBeforeUnmount(() => clearInterval(refreshTimer))
       </section>
 
       <section class="adm-section">
+        <h2>QR DELLE SQUADRE</h2>
+        <TeamQrCodes />
+      </section>
+
+      <section class="adm-section">
         <h2>REGISTRO AZIONI</h2>
         <button class="adm-btn" type="button" @click="loadLog">CARICA REGISTRO</button>
         <ul class="adm-grid adm-muted" style="list-style: none; padding: 0">

@@ -1,25 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSheetHtml, teamUrl } from '../../scripts/qr-sheet.mjs'
-
-describe('teamUrl', () => {
-  it('punta a /play/{id} sul dominio indicato', () => {
-    expect(teamUrl('https://marcos30.netlify.app', 7)).toBe('https://marcos30.netlify.app/play/7')
-  })
-
-  it('ignora spazi e barre finali', () => {
-    expect(teamUrl('  https://marcos30.netlify.app/// ', 3)).toBe('https://marcos30.netlify.app/play/3')
-  })
-
-  it('accetta anche http con porta (prove in rete locale)', () => {
-    expect(teamUrl('http://192.168.1.20:3000', 1)).toBe('http://192.168.1.20:3000/play/1')
-  })
-
-  it('rifiuta indirizzi non validi', () => {
-    for (const bad of ['', 'marcos30.netlify.app', 'ftp://x.it', undefined]) {
-      expect(() => teamUrl(bad as string, 1)).toThrow('Indirizzo non valido')
-    }
-  })
-})
+import { buildSheetHtml } from '../../scripts/qr-sheet.mjs'
 
 describe('buildSheetHtml', () => {
   const item = (id: number, name = `TEAM ${id}`) => ({

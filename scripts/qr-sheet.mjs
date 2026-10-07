@@ -1,17 +1,6 @@
 const escapeHtml = (text) =>
   String(text).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char])
 
-// Link a cui punta il QR di una squadra: /play/{id} sul dominio indicato.
-export function teamUrl(baseUrl, teamId) {
-  const base = String(baseUrl ?? '').trim().replace(/\/+$/, '')
-
-  if (!/^https?:\/\/[^\s/]+/.test(base)) {
-    throw new Error('Indirizzo non valido: usa per esempio https://marcos30.netlify.app')
-  }
-
-  return `${base}/play/${teamId}`
-}
-
 // Pagina da stampare: un riquadro per squadra (nome, QR grande, link), 2 per riga.
 export function buildSheetHtml(items) {
   const cards = items
