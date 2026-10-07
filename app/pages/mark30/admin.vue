@@ -64,6 +64,13 @@ onMounted(async () => {
       </section>
 
       <section class="adm-section">
+        <h2>CLASSIFICA</h2>
+        <NuxtLink to="/classifica" class="adm-btn" target="_blank" style="display: block; text-align: center; text-decoration: none; color: inherit; padding-top: 13px">
+          APRI LA CLASSIFICA LIVE ↗
+        </NuxtLink>
+      </section>
+
+      <section class="adm-section">
         <h2>FOTO E VIDEO</h2>
         <ProofExport :pin="session.pin.value" />
       </section>

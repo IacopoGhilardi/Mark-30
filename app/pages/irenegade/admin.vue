@@ -166,6 +166,7 @@ onBeforeUnmount(() => clearInterval(refreshTimer))
           {{ overview.status.playEnabled ? 'FERMA' : 'RIAVVIA' }}
         </button>
         <button class="adm-btn" type="button" :disabled="busy" @click="refresh()">↻</button>
+        <NuxtLink to="/classifica" class="adm-btn" target="_blank" style="width: auto; min-height: 40px; padding: 8px 12px; font-size: 14px; display: inline-flex; align-items: center; text-decoration: none; color: inherit">CLASSIFICA ↗</NuxtLink>
         <span class="adm-muted" style="margin-left: auto">{{ updatedAt }}</span>
       </div>
 
