@@ -17,9 +17,11 @@
     "test:db": "node scripts/ensure-db.mjs && npm run db:reset && supabase test db",
     "test": "vitest run",
     "test:all": "npm test && npm run test:db",
-    "db:missions": "node scripts/missions-migration.mjs",
+    "db:missions": "node scripts/sync-migration.mjs missions",
     "dev:all": "node scripts/dev.mjs",
-    "qr": "node scripts/qr.mjs"
+    "qr": "node scripts/qr.mjs",
+    "db:teams": "node scripts/sync-migration.mjs teams",
+    "db:sync": "node scripts/sync-migration.mjs all"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

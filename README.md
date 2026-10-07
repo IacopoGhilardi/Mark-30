@@ -47,9 +47,15 @@ direttamente (RLS attiva, nessuna policy per `anon`): parla solo con funzioni Po
 
 Tabelle: `teams`, `missions`, `team_missions` (assegnazione + completion).
 Squadre e missioni sono caricate dalla migration (seed generato da `app/datas/`).
-Se modifichi `app/datas/missions.ts` (testi, punti, tipi di prova, nuove missioni) esegui
-`npm run db:missions`: genera una migration che allinea il DB (inserisce, aggiorna e disattiva
-quelle tolte), poi `npm run db:push`.
+Se modifichi `app/datas/missions.ts` (testi, punti, tipi di prova, nuove missioni) o
+`app/datas/teams.ts` (nomi e componenti delle squadre) genera una migration che allinea il DB,
+poi `npm run db:push`:
+
+```bash
+npm run db:missions   # solo le missioni (le tolte vengono disattivate)
+npm run db:teams      # solo le squadre (le tolte si eliminano solo se non hanno giocato)
+npm run db:sync       # entrambe in un'unica migration
+```
 
 Funzioni:
 
