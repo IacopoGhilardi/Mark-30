@@ -40,6 +40,8 @@ direttamente (RLS attiva, nessuna policy per `anon`): parla solo con funzioni Po
 - **Prove** (foto/video) in un bucket Storage privato, collegate a squadra e missione.
   Le foto sono compresse nel browser (max 1600 px, JPEG); limite 20 MB per file, quindi
   i video devono essere corti (~15 s).
+  L'upload è idempotente: il nome include l'hash del contenuto (`team-3/mission-7-<hash>.jpg`),
+  quindi riprovare o inviare due volte lo stesso file non crea copie.
 
 ### Database
 
