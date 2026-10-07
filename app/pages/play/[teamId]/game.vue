@@ -856,7 +856,7 @@ useHead({
           <span>{{ currentMission.category }}</span>
         </div>
 
-        <h1>{{ currentMission.title }}</h1>
+        <h1 :style="{ '--word': longestWordLength(currentMission.title) }">{{ currentMission.title }}</h1>
 
         <p
           v-if="currentMission.text"
@@ -1357,10 +1357,17 @@ button {
   max-width: 540px;
   margin: 14px 0 0;
 
-  font-size: clamp(48px, 14vw, 76px);
+  /* entra in larghezza: la parola più lunga (--word) decide la dimensione */
+  font-size: max(
+    28px,
+    min(
+      clamp(34px, 10.5vw, 62px),
+      calc((100vw - 48px) / (var(--word, 8) * 0.62))
+    )
+  );
   font-weight: 950;
-  line-height: 0.88;
-  letter-spacing: -0.06em;
+  line-height: 0.92;
+  letter-spacing: -0.05em;
   overflow-wrap: anywhere;
 }
 
@@ -1584,7 +1591,7 @@ button {
 .proof-heading h2 {
   margin: 0;
 
-  font-size: clamp(36px, 10vw, 52px);
+  font-size: clamp(30px, 8.5vw, 46px);
   font-weight: 950;
   line-height: 0.93;
   letter-spacing: -0.045em;
@@ -1729,7 +1736,7 @@ button {
 .points-earned {
   margin: 12px 0 0;
 
-  font-size: clamp(50px, 14vw, 76px);
+  font-size: clamp(40px, 11vw, 64px);
   font-weight: 950;
   line-height: 1;
   letter-spacing: -0.05em;
@@ -1791,7 +1798,7 @@ footer {
 .error-screen h1 {
   margin: 10px 0 35px;
 
-  font-size: 52px;
+  font-size: 40px;
   line-height: 0.9;
   letter-spacing: -0.05em;
 }
@@ -1870,7 +1877,7 @@ button:disabled {
 .game-intro h1 {
   margin: 0;
   color: #f4f4f0;
-  font-size: clamp(38px, 12vw, 58px);
+  font-size: clamp(34px, 10vw, 52px);
   font-weight: 950;
   line-height: 0.9;
   letter-spacing: -0.055em;
@@ -1974,7 +1981,7 @@ button:disabled {
 
 .stop-screen h1 {
   margin: 0;
-  font-size: clamp(54px, 18vw, 92px);
+  font-size: clamp(44px, 14vw, 80px);
   font-weight: 950;
   line-height: 0.88;
   letter-spacing: -0.06em;

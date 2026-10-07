@@ -205,7 +205,7 @@ useHead({
 .team-section h1 {
   margin: 0 0 25px;
 
-  font-size: clamp(48px, 15vw, 78px);
+  font-size: clamp(38px, 11.5vw, 70px);
   font-weight: 950;
   line-height: 0.9;
   letter-spacing: -0.055em;
@@ -259,7 +259,7 @@ useHead({
 .phone-section h2 {
   margin: 0;
 
-  font-size: clamp(35px, 10vw, 54px);
+  font-size: clamp(30px, 8.5vw, 50px);
   font-weight: 950;
   line-height: 0.93;
   letter-spacing: -0.045em;
@@ -341,7 +341,7 @@ footer {
 .not-found h1 {
   margin: 0 0 40px;
 
-  font-size: clamp(50px, 15vw, 80px);
+  font-size: clamp(40px, 12vw, 72px);
   font-weight: 950;
   line-height: 0.88;
   letter-spacing: -0.055em;

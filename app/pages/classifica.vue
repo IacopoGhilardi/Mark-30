@@ -312,7 +312,7 @@ useHead({
 .hero h1 {
   margin: 0;
 
-  font-size: clamp(56px, 15vw, 105px);
+  font-size: clamp(44px, 12vw, 96px);
   font-weight: 950;
   line-height: 0.8;
   letter-spacing: -0.07em;

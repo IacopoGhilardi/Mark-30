@@ -119,7 +119,7 @@ useHead({
 
 .headline {
   margin: 0;
-  font-size: clamp(48px, 14vw, 82px);
+  font-size: clamp(38px, 11vw, 76px);
   font-weight: 950;
   line-height: 0.88;
   letter-spacing: -0.065em;

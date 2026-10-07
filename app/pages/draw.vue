@@ -349,7 +349,7 @@ button {
 .drawing-content h2,
 .reveal-heading h2 {
   margin: 0;
-  font-size: clamp(48px, 15vw, 78px);
+  font-size: clamp(38px, 12vw, 70px);
   font-weight: 950;
   line-height: 0.88;
   letter-spacing: -0.06em;
@@ -467,7 +467,7 @@ button {
 }
 
 .reveal-heading h2 {
-  font-size: clamp(44px, 13vw, 70px);
+  font-size: clamp(36px, 11vw, 62px);
 }
 
 .reveal-subtitle {
