@@ -1,12 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { uploadProof } from '../../app/api/uploadProof'
+import { MAX_PROOF_BYTES, uploadProof } from '../../app/api/uploadProof'
 
 const upload = vi.fn()
 const from = vi.fn()
+const compressImage = vi.fn()
 
 beforeEach(() => {
   upload.mockReset().mockResolvedValue({ error: null })
   from.mockReset().mockReturnValue({ upload })
+  compressImage.mockReset().mockImplementation(async (file: File) => file)
+  vi.stubGlobal('compressImage', compressImage)
   vi.stubGlobal('useSupabase', () => ({ storage: { from } }))
   vi.spyOn(Date, 'now').mockReturnValue(1700000000000)
 })
@@ -45,5 +48,35 @@ describe('uploadProof', () => {
     await expect(
       uploadProof(1, 2, new File(['x'], 'a.png'))
     ).rejects.toThrow('file troppo grande')
+  })
+
+  it('carica la versione compressa della foto', async () => {
+    const original = new File(['grande'], 'Foto.HEIC', { type: 'image/heic' })
+    const compressed = new File(['piccola'], 'Foto.jpg', { type: 'image/jpeg' })
+    compressImage.mockResolvedValue(compressed)
+
+    const path = await uploadProof(7, 12, original)
+
+    expect(compressImage).toHaveBeenCalledWith(original)
+    expect(path).toBe('team-7/mission-12-1700000000000.jpg')
+    expect(upload).toHaveBeenCalledWith(path, compressed, {
+      contentType: 'image/jpeg',
+      upsert: false,
+    })
+  })
+
+  it('rifiuta un file oltre 50 MB senza caricarlo', async () => {
+    const big = new File(['x'], 'video.mp4', { type: 'video/mp4' })
+    Object.defineProperty(big, 'size', { value: MAX_PROOF_BYTES + 1 })
+
+    await expect(uploadProof(1, 2, big)).rejects.toThrow('File troppo grande')
+    expect(upload).not.toHaveBeenCalled()
+  })
+
+  it('accetta un file esattamente al limite', async () => {
+    const edge = new File(['x'], 'video.mp4', { type: 'video/mp4' })
+    Object.defineProperty(edge, 'size', { value: MAX_PROOF_BYTES })
+
+    await expect(uploadProof(1, 2, edge)).resolves.toMatch(/^team-1\//)
   })
 })
