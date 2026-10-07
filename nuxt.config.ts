@@ -4,6 +4,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   // SPA statica: deploy su Netlify, le chiamate vanno direttamente a Supabase
   ssr: false,
+  // le funzioni in app/api sono richiamabili dalle view senza import
+  imports: { dirs: ['api'] },
   runtimeConfig: {
     public: {
       supabaseUrl: '',

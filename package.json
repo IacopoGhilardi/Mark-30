@@ -13,7 +13,10 @@
     "db:diff": "supabase db diff",
     "db:start": "supabase start -x gotrue,realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
     "db:stop": "supabase stop",
-    "db:reset": "supabase db reset"
+    "db:reset": "supabase db reset",
+    "test:db": "(supabase status >/dev/null 2>&1 || npm run db:start) && npm run db:reset && supabase test db",
+    "test": "vitest run",
+    "test:all": "npm test && npm run test:db"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
@@ -22,6 +25,7 @@
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
-    "supabase": "^2.120.0"
+    "supabase": "^2.120.0",
+    "vitest": "^5.0.3"
   }
 }

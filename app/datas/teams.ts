@@ -23,7 +23,7 @@ export const teams: Team[] = [
   {
     id: 4,
     name: 'TEAM 4',
-    members: ['Pasqui', 'Asia Rinzi', 'Ghila', 'Giulia Carni', 'Crappi'],
+    members: ['Pasqui', 'Asia Rinzi', 'Ghila', 'Giulia Carni', 'Semi'],
   },
   {
     id: 5,
