@@ -220,7 +220,9 @@ Su Netlify: build `npm run generate`, publish `.output/public` (già in `netlify
 
 1. Creare il progetto Supabase e applicare le migrations.
 2. Impostare le env su Netlify e fare il deploy.
-3. Generare un QR per squadra che punta a `/play/{teamId}` sul dominio definitivo.
+3. Generare i QR: `npm run qr -- https://il-tuo-sito.netlify.app` crea `qr/team-N.svg` e una pagina
+   `qr/stampa.html` da stampare (2 squadre per riga, livello di correzione alto). La cartella `qr/` non
+   è nel repository: dipende dal dominio.
 4. Provare con più telefoni, una missione con foto inclusa.
 5. Azzerare le missioni di prova (`team_missions`) prima di iniziare.
 6. Dopo la festa: scaricare le prove dal bucket `proofs` (dashboard o service key).

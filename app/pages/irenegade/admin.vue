@@ -11,11 +11,12 @@ const log = ref<AdminLogRow[]>([])
 const error = ref('')
 const busy = ref(false)
 const now = ref(Date.now())
+const updatedAt = ref('')
 
-type Inputs = { assign: number | null; cancel: number | null; delta: number | null; reason: string }
+type Inputs = { assign: number | null; cancel: number | null; delta: number | null; sign: 1 | -1; reason: string }
 const inputs = reactive<Record<number, Inputs>>({})
 const inputOf = (teamId: number) =>
-  (inputs[teamId] ??= { assign: null, cancel: null, delta: null, reason: '' })
+  (inputs[teamId] ??= { assign: null, cancel: null, delta: null, sign: 1, reason: '' })
 
 let refreshTimer: ReturnType<typeof setInterval> | undefined
 
@@ -32,6 +33,7 @@ async function refresh(options: { silent?: boolean } = {}) {
   try {
     const load = () => adminOverview(session.pin.value)
     overview.value = options.silent ? await load() : await withLoader(load, 'CARICO...')
+    updatedAt.value = new Date().toLocaleTimeString('it-IT')
   } catch (e) {
     if (!options.silent) error.value = errorMessage(e)
   }
@@ -70,6 +72,16 @@ async function run(action: () => Promise<unknown>, loaderText: string) {
   }
 }
 
+const statusLabel = computed(() => {
+  const status = overview.value?.status
+
+  if (!status) return ''
+  if (!status.playEnabled) return 'GIOCO FERMO'
+  if (!status.missionsEnabled) return 'MISSIONI FERME'
+
+  return 'GIOCO ATTIVO'
+})
+
 const setGame = (next: GameStatus) => run(() => adminSetGame(session.pin.value, next), 'AGGIORNO...')
 
 function unblock(team: AdminTeam) {
@@ -91,11 +103,11 @@ function cancel(team: AdminTeam) {
 }
 
 function adjust(team: AdminTeam) {
-  const { delta, reason } = inputOf(team.teamId)
+  const { delta, sign, reason } = inputOf(team.teamId)
   if (!delta) return
   return run(async () => {
-    await adminAdjustPoints(session.pin.value, team.teamId, delta, reason)
-    inputs[team.teamId] = { assign: null, cancel: null, delta: null, reason: '' }
+    await adminAdjustPoints(session.pin.value, team.teamId, Math.abs(delta) * sign, reason)
+    inputs[team.teamId] = { assign: null, cancel: null, delta: null, sign: 1, reason: '' }
   }, 'AGGIORNO PUNTI...')
 }
 
@@ -143,6 +155,20 @@ onBeforeUnmount(() => clearInterval(refreshTimer))
     <AdminPinForm v-if="!overview" :busy="busy" :error="error" @submit="enter" />
 
     <template v-else>
+      <div class="adm-bar">
+        <strong :class="statusLabel === 'GIOCO ATTIVO' ? 'adm-on' : 'adm-off'">● {{ statusLabel }}</strong>
+        <button
+          class="adm-btn"
+          type="button"
+          :disabled="busy"
+          @click="setGame({ ...overview.status, playEnabled: !overview.status.playEnabled })"
+        >
+          {{ overview.status.playEnabled ? 'FERMA' : 'RIAVVIA' }}
+        </button>
+        <button class="adm-btn" type="button" :disabled="busy" @click="refresh()">↻</button>
+        <span class="adm-muted" style="margin-left: auto">{{ updatedAt }}</span>
+      </div>
+
       <p v-if="error" class="adm-error" role="alert">{{ error }}</p>
 
       <section class="adm-section">
@@ -159,50 +185,83 @@ onBeforeUnmount(() => clearInterval(refreshTimer))
         <h2>SQUADRE</h2>
 
         <div class="adm-grid">
-          <div v-for="team in overview.teams" :key="team.teamId" class="adm-card" :class="{ 'adm-warn': isStuck(team) }">
-            <div class="adm-row">
+          <details
+            v-for="team in overview.teams"
+            :key="team.teamId"
+            class="adm-card adm-details"
+            :class="{ 'adm-warn': isStuck(team) }"
+            :open="isStuck(team)"
+          >
+            <summary>
               <strong>{{ team.name }}</strong>
               <span>{{ team.score }} pt</span>
-              <span class="adm-muted">{{ team.completed }} fatte · {{ team.skipped }} scartate</span>
-              <span v-if="team.adjustments" class="adm-muted">({{ team.adjustments > 0 ? '+' : '' }}{{ team.adjustments }} correzioni)</span>
+              <span v-if="isStuck(team)" class="adm-badge adm-off">FERMA {{ minutesSince(team.activeMission!.assignedAt) }} MIN</span>
+              <span v-else-if="!team.activeMission" class="adm-badge adm-muted">SENZA MISSIONE</span>
+            </summary>
+
+            <div class="adm-body">
+              <p class="adm-muted">
+                {{ team.completed }} fatte · {{ team.skipped }} scartate
+                <template v-if="team.adjustments"> · {{ team.adjustments > 0 ? '+' : '' }}{{ team.adjustments }} correzioni</template>
+              </p>
+
+              <p class="adm-muted">
+                <template v-if="team.activeMission">In corso: <strong>{{ team.activeMission.title }}</strong></template>
+                <template v-else>Nessuna missione attiva</template>
+              </p>
+
+              <button class="adm-btn primary" type="button" :disabled="busy" @click="unblock(team)">
+                SBLOCCA SQUADRA
+              </button>
+
+              <div class="adm-row">
+                <select v-model="inputOf(team.teamId).assign">
+                  <option :value="null">Assegna una missione…</option>
+                  <option v-for="m in overview.missions" :key="m.id" :value="m.id">{{ m.id }} · {{ m.title }}</option>
+                </select>
+                <button class="adm-btn" type="button" :disabled="busy || inputOf(team.teamId).assign === null" @click="assign(team)">ASSEGNA</button>
+              </div>
+
+              <div class="adm-row">
+                <select v-model="inputOf(team.teamId).cancel">
+                  <option :value="null">Annulla una completata…</option>
+                  <option v-for="m in team.completedMissions" :key="m.id" :value="m.id">{{ m.title }} (+{{ m.points }})</option>
+                </select>
+                <button class="adm-btn danger" type="button" :disabled="busy || inputOf(team.teamId).cancel === null" @click="cancel(team)">ANNULLA</button>
+              </div>
+
+              <div class="adm-grid">
+                <div class="adm-row">
+                  <button
+                    class="adm-btn"
+                    :class="{ on: inputOf(team.teamId).sign === 1 }"
+                    type="button"
+                    @click="inputOf(team.teamId).sign = 1"
+                  >+ AGGIUNGI</button>
+                  <button
+                    class="adm-btn"
+                    :class="{ on: inputOf(team.teamId).sign === -1 }"
+                    type="button"
+                    @click="inputOf(team.teamId).sign = -1"
+                  >− TOGLI</button>
+                </div>
+
+                <div class="adm-row">
+                  <input v-model.number="inputOf(team.teamId).delta" type="number" inputmode="numeric" min="1" placeholder="Punti" style="flex: 1 1 90px" />
+                  <input v-model="inputOf(team.teamId).reason" placeholder="Motivo" enterkeyhint="done" style="flex: 3 1 160px" />
+                </div>
+
+                <button
+                  class="adm-btn"
+                  type="button"
+                  :disabled="busy || !inputOf(team.teamId).delta || !inputOf(team.teamId).reason.trim()"
+                  @click="adjust(team)"
+                >APPLICA PUNTI</button>
+              </div>
+
+              <button class="adm-btn danger" type="button" :disabled="busy" @click="resetTeam(team)">AZZERA SQUADRA</button>
             </div>
-
-            <p class="adm-muted">
-              <template v-if="team.activeMission">
-                In corso: {{ team.activeMission.title }}
-                <strong v-if="isStuck(team)"> · ferma da {{ minutesSince(team.activeMission.assignedAt) }} min</strong>
-              </template>
-              <template v-else>Nessuna missione attiva</template>
-            </p>
-
-            <button class="adm-btn primary" type="button" :disabled="busy" @click="unblock(team)">
-              SBLOCCA SQUADRA
-            </button>
-
-            <div class="adm-row">
-              <select v-model="inputOf(team.teamId).assign">
-                <option :value="null">Assegna una missione…</option>
-                <option v-for="m in overview.missions" :key="m.id" :value="m.id">{{ m.id }} · {{ m.title }}</option>
-              </select>
-              <button class="adm-btn" type="button" :disabled="busy || inputOf(team.teamId).assign === null" @click="assign(team)">ASSEGNA</button>
-            </div>
-
-            <div class="adm-row">
-              <select v-model="inputOf(team.teamId).cancel">
-                <option :value="null">Annulla una completata…</option>
-                <option v-for="m in team.completedMissions" :key="m.id" :value="m.id">{{ m.title }} (+{{ m.points }})</option>
-              </select>
-              <button class="adm-btn danger" type="button" :disabled="busy || inputOf(team.teamId).cancel === null" @click="cancel(team)">ANNULLA</button>
-            </div>
-
-            <div class="adm-row">
-              <input v-model.number="inputOf(team.teamId).delta" type="number" inputmode="numeric" placeholder="± punti" style="width: 110px" />
-              <input v-model="inputOf(team.teamId).reason" placeholder="Motivo" style="flex: 1; min-width: 120px" />
-              <button class="adm-btn" type="button" :disabled="busy || !inputOf(team.teamId).delta || !inputOf(team.teamId).reason.trim()" @click="adjust(team)">APPLICA</button>
-            </div>
-
-            <button class="adm-btn danger" type="button" :disabled="busy" @click="resetTeam(team)">AZZERA SQUADRA</button>
-          </div>
+          </details>
         </div>
       </section>
 

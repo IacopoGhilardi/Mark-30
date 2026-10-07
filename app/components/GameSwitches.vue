@@ -4,7 +4,17 @@ import type { GameStatus } from '../types/admin'
 const props = defineProps<{ status: GameStatus; busy?: boolean }>()
 const emit = defineEmits<{ change: [status: GameStatus] }>()
 
+const STOP_MESSAGES: Record<keyof GameStatus, string> = {
+  playEnabled: 'Fermare il gioco? Nessuna squadra potrà più giocare finché non lo riavvii.',
+  missionsEnabled: 'Fermare le nuove missioni? Le squadre non potranno estrarne né saltarne.',
+}
+
+// Fermare chiede conferma (un tocco sbagliato bloccherebbe tutti); riavviare no.
 function toggle(key: keyof GameStatus) {
+  if (props.status[key] && !confirm(STOP_MESSAGES[key])) {
+    return
+  }
+
   emit('change', { ...props.status, [key]: !props.status[key] })
 }
 </script>

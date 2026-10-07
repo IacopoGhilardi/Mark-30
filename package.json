@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:all": "npm test && npm run test:db",
     "db:missions": "node scripts/missions-migration.mjs",
-    "dev:all": "node scripts/dev.mjs"
+    "dev:all": "node scripts/dev.mjs",
+    "qr": "node scripts/qr.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
@@ -28,6 +29,7 @@
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
+    "qrcode": "^1.5.4",
     "supabase": "^2.120.0",
     "vitest": "^5.0.3"
   }

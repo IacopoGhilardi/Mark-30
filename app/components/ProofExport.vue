@@ -70,6 +70,11 @@ function downloadCsv() {
 
     <p v-if="error" class="adm-error" role="alert">{{ error }}</p>
 
+    <p v-if="teams.length" class="adm-muted">
+      Gli ZIP si salvano nei download del telefono (iPhone: app File &gt; Download).
+      Tieni la pagina aperta finché non finisce.
+    </p>
+
     <div v-for="team in teams" :key="team.teamId" class="adm-card">
       <div class="adm-row">
         <strong>{{ team.name }}</strong>
