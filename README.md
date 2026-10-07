@@ -14,8 +14,8 @@ con foto, video o testo, classifica live. Ogni squadra gioca da un solo telefono
 | --- | --- |
 | `/` | Presentazione |
 | `/draw` | Finta estrazione delle squadre (solo scenografia, non usa il DB) |
-| `/play/{teamId}` | Ingresso del Game Phone di una squadra (il QR punta qui). Se la squadra ha già iniziato (missione attiva, completate o scartate) rimanda subito a `/game` |
-| `/play/{teamId}/game` | Missioni e prove |
+| `/play/{teamId}` | Ingresso del Game Phone di una squadra (il QR punta qui). "Siamo pronti" estrae la prima missione e apre il gioco. Se la squadra ha già iniziato (missione attiva, completate o scartate) rimanda subito a `/game` |
+| `/play/{teamId}/game` | Missioni e prove. Se la squadra non ha ancora iniziato (o è stata azzerata da un admin) rimanda a `/play/{teamId}` |
 | `/classifica` | Classifica live |
 | `/mark30/admin` | Admin di Marco (PIN): pausa del gioco ed esportazione delle foto |
 | `/irenegade/admin` | Admin completo (PIN): squadre bloccate, punti, annulli, reset |

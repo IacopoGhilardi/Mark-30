@@ -321,8 +321,16 @@ async function applyState(
     return
   }
 
-  // nessuna missione attiva per il server. Se la squadra sta guardando la
-  // schermata "completata" ci resta, finché non chiede la prossima (advance).
+  // nessuna missione attiva per il server. Una squadra che non ha ancora iniziato
+  // (mai giocato, oppure azzerata da un admin) torna alla pagina d'ingresso: lì
+  // "Siamo pronti" estrae la prima missione.
+  if (!hasStartedGame(next)) {
+    await navigateTo(`/play/${teamId.value}`, { replace: true })
+    return
+  }
+
+  // Se la squadra sta guardando la schermata "completata" ci resta, finché non
+  // chiede la prossima (advance).
   if (step.value === 'completed' && currentMission.value && !options.advance) {
     return
   }
@@ -346,7 +354,7 @@ async function applyState(
     }
   }
 
-  // squadra nuova (o azzerata da un admin): si estrae la prima missione
+  // ha già iniziato ma non ha missioni attive né completate (solo scartate): se ne estrae una
   try {
     await applyState(await drawMission(teamId.value), { fresh: true, silent: options.silent })
   } catch (error) {

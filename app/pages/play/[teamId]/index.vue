@@ -14,6 +14,27 @@ const team = computed(() => {
 // Una squadra che ha già iniziato (missione attiva, completate o scartate) va
 // diretta al gioco: la pagina d'ingresso serve solo la prima volta.
 const checking = ref(true)
+const starting = ref(false)
+const startError = ref('')
+
+// "Siamo pronti" avvia davvero il gioco: estrae la prima missione (salvata subito
+// nel DB) e solo dopo apre la pagina di gioco. Chi arriva al gioco senza aver
+// iniziato viene rimandato qui.
+async function startGame() {
+  if (starting.value) return
+
+  starting.value = true
+  startError.value = ''
+
+  try {
+    await withLoader(() => drawMission(teamId.value), 'ESTRAZIONE DELLA PRIMA MISSIONE...')
+    await navigateTo(`/play/${teamId.value}/game`)
+  } catch (error) {
+    startError.value = gameErrorMessage(error)
+  } finally {
+    starting.value = false
+  }
+}
 
 onMounted(async () => {
   if (!team.value) {
@@ -98,13 +119,23 @@ useHead({
           Tenetelo con voi.
         </p>
 
-        <NuxtLink
-          :to="`/play/${team.id}/game`"
+        <button
           class="ready-button"
+          type="button"
+          :disabled="starting"
+          @click="startGame"
         >
           <span>SIAMO PRONTI</span>
           <span class="arrow">→</span>
-        </NuxtLink>
+        </button>
+
+        <p
+          v-if="startError"
+          class="start-error"
+          role="alert"
+        >
+          {{ startError }}
+        </p>
       </div>
 
       <footer>
@@ -284,6 +315,8 @@ useHead({
 
 .ready-button {
   width: 100%;
+  font: inherit;
+  cursor: pointer;
   min-height: 68px;
   padding: 0 22px;
 
@@ -365,5 +398,23 @@ footer {
     background: transparent;
     color: #f4f4f0;
   }
+}
+
+.ready-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.start-error {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+
+  border: 1px solid #ff7a7a;
+  color: #ff7a7a;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
 }
 </style>
