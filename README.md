@@ -17,6 +17,7 @@ con foto, video o testo, classifica live. Ogni squadra gioca da un solo telefono
 | `/play/{teamId}` | Ingresso del Game Phone di una squadra (il QR punta qui) |
 | `/play/{teamId}/game` | Missioni e prove |
 | `/classifica` | Classifica live |
+| `/export` | Esportazione delle prove (solo admin, pensata per il telefono) |
 
 L'identità della squadra deriva dal link `/play/{teamId}`: niente login. Rientrando
 dallo stesso QR (anche da un altro telefono) la squadra ritrova punteggio e missione
@@ -33,6 +34,8 @@ direttamente (RLS attiva, nessuna policy per `anon`): parla solo con funzioni Po
 - **Punti decisi dal server**, letti dalla missione, mai inviati dal client.
 - **Completamento idempotente**: un secondo invio non assegna di nuovo i punti.
 - **Prove** (foto/video) in un bucket Storage privato, collegate a squadra e missione.
+  Le foto sono compresse nel browser (max 1600 px, JPEG); limite 20 MB per file, quindi
+  i video devono essere corti (~15 s).
 
 ### Database
 
@@ -124,6 +127,22 @@ npm run db:push    # applica le migrations
 
 I progetti gratuiti vanno in pausa dopo 7 giorni di inattività: apri il progetto il
 giorno prima della festa.
+
+## Esportazione delle prove (`/export`)
+
+Pagina pensata per il telefono, tutta lato browser (il sito resta statico). Dopo il login
+mostra le squadre con il numero di file e permette di scaricare uno **ZIP per squadra**
+(file con nomi leggibili + `prove.csv`) e l'**indice CSV** completo, con anche i testi.
+
+Accesso protetto da Supabase Auth: un solo utente admin.
+
+1. Dashboard Supabase > Authentication: **disabilita le registrazioni** e crea a mano
+   l'utente admin (email + password).
+2. Nel SQL editor: `insert into public.admins (email) values ('tua@email.it');`
+3. Apri `/export` dal telefono e accedi.
+
+Solo chi è in `admins` può elencare le prove e scaricare i file del bucket (policy RLS).
+Consiglio: fai un'esportazione anche a metà festa, come copia di sicurezza.
 
 ## Test
 

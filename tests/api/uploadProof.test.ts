@@ -65,12 +65,20 @@ describe('uploadProof', () => {
     })
   })
 
-  it('rifiuta un file oltre 50 MB senza caricarlo', async () => {
+  it('rifiuta un file oltre 20 MB senza caricarlo', async () => {
     const big = new File(['x'], 'video.mp4', { type: 'video/mp4' })
     Object.defineProperty(big, 'size', { value: MAX_PROOF_BYTES + 1 })
 
     await expect(uploadProof(1, 2, big)).rejects.toThrow('File troppo grande')
     expect(upload).not.toHaveBeenCalled()
+  })
+
+  it('controlla il peso dopo la compressione, non prima', async () => {
+    const hugePhoto = new File(['x'], 'foto.jpg', { type: 'image/jpeg' })
+    Object.defineProperty(hugePhoto, 'size', { value: MAX_PROOF_BYTES * 2 })
+    compressImage.mockResolvedValue(new File(['piccola'], 'foto.jpg', { type: 'image/jpeg' }))
+
+    await expect(uploadProof(1, 2, hugePhoto)).resolves.toMatch(/^team-1\//)
   })
 
   it('accetta un file esattamente al limite', async () => {

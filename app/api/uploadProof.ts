@@ -1,5 +1,6 @@
-// Stesso limite del bucket `proofs` (vedi migration).
-export const MAX_PROOF_BYTES = 50 * 1024 * 1024
+// Stesso limite del bucket `proofs` (vedi migration): 20 MB per file.
+// Le foto vengono compresse prima del controllo, quindi pesa soprattutto per i video.
+export const MAX_PROOF_BYTES = 20 * 1024 * 1024
 
 // Carica foto/video della prova nel bucket privato e restituisce il percorso.
 // Le foto vengono ridimensionate e compresse nel browser prima dell'upload.
@@ -8,13 +9,13 @@ export async function uploadProof(
   missionId: number,
   file: File
 ) {
-  if (file.size > MAX_PROOF_BYTES) {
+  const upload = await compressImage(file)
+
+  if (upload.size > MAX_PROOF_BYTES) {
     throw new Error(
-      'File troppo grande (max 50 MB). Registra un video più corto o a risoluzione più bassa.'
+      'File troppo grande (max 20 MB). Registra un video più corto (circa 15 secondi) o a risoluzione più bassa.'
     )
   }
-
-  const upload = await compressImage(file)
 
   const ext = upload.name.includes('.')
     ? upload.name.split('.').pop()!.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin'
