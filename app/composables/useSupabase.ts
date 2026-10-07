@@ -17,9 +17,8 @@ export function useSupabase(): SupabaseClient {
   }
 
   client = createClient(supabaseUrl, supabaseAnonKey, {
-    // i giocatori non fanno login (l'identità arriva dal link /play/{teamId});
-    // la sessione serve solo all'admin della pagina /export
-    auth: { persistSession: true, autoRefreshToken: true },
+    // nessun login: l'identità della squadra arriva dal link /play/{teamId}
+    auth: { persistSession: false, autoRefreshToken: false },
   })
 
   return client

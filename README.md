@@ -17,7 +17,8 @@ con foto, video o testo, classifica live. Ogni squadra gioca da un solo telefono
 | `/play/{teamId}` | Ingresso del Game Phone di una squadra (il QR punta qui) |
 | `/play/{teamId}/game` | Missioni e prove |
 | `/classifica` | Classifica live |
-| `/export` | Esportazione delle prove (solo admin, pensata per il telefono) |
+| `/mark30/admin` | Admin di Marco (PIN): pausa del gioco ed esportazione delle foto |
+| `/irenegade/admin` | Admin completo (PIN): squadre bloccate, punti, annulli, reset |
 
 L'identità della squadra deriva dal link `/play/{teamId}`: niente login. Rientrando
 dallo stesso QR (anche da un altro telefono) la squadra ritrova punteggio e missione
@@ -133,21 +134,39 @@ npm run db:push    # applica le migrations
 I progetti gratuiti vanno in pausa dopo 7 giorni di inattività: apri il progetto il
 giorno prima della festa.
 
-## Esportazione delle prove (`/export`)
+## Aree admin (PIN)
 
-Pagina pensata per il telefono, tutta lato browser (il sito resta statico). Dopo il login
-mostra le squadre con il numero di file e permette di scaricare uno **ZIP per squadra**
-(file con nomi leggibili + `prove.csv`) e l'**indice CSV** completo, con anche i testi.
+Due pagine pensate per il telefono, tutte lato browser (il sito resta statico). Il PIN **non
+sta nel codice**: lo verifica il database a ogni azione (i PIN sono salvati come hash), quindi
+non si legge dal JavaScript del sito. Non c'è una chiamata di login a parte: il PIN viene
+validato dalla prima chiamata vera. Dopo 8 PIN errati in 10 minuti i tentativi vengono bloccati.
 
-Accesso protetto da Supabase Auth: un solo utente admin.
+| Pagina | PIN | Cosa può fare |
+| --- | --- | --- |
+| `/mark30/admin` | Marco (o Irene) | Fermare il gioco o solo le nuove missioni; esportare foto e video |
+| `/irenegade/admin` | Irene | Tutto quello di Marco + sbloccare squadre, assegnare missioni, annullare missioni completate, correggere i punti, azzerare una squadra o l'intero gioco, vedere il registro delle azioni |
 
-1. Dashboard Supabase > Authentication: **disabilita le registrazioni** e crea a mano
-   l'utente admin (email + password).
-2. Nel SQL editor: `insert into public.admins (email) values ('tua@email.it');`
-3. Apri `/export` dal telefono e accedi.
+Imposta i PIN dal SQL editor di Supabase (mai nel codice):
 
-Solo chi è in `admins` può elencare le prove e scaricare i file del bucket (policy RLS).
-Consiglio: fai un'esportazione anche a metà festa, come copia di sicurezza.
+```sql
+insert into public.admin_pins (role, pin_hash) values
+  ('marco',     extensions.crypt('PIN_DI_MARCO',     extensions.gen_salt('bf'))),
+  ('irenegade', extensions.crypt('PIN_DI_IRENEGADE', extensions.gen_salt('bf')))
+on conflict (role) do update set pin_hash = excluded.pin_hash;
+```
+
+- **Pausa**: "Gioco" fermo blocca estrazioni, salti e completamenti; "Nuove missioni" ferme blocca
+  solo estrazioni e salti. Le azioni di Irene funzionano anche in pausa. Le pagine di gioco
+  leggono lo stato con `getGameStatus()`.
+- **Squadra bloccata**: `Sblocca squadra` toglie la missione attiva (torna disponibile) e ne
+  assegna un'altra. Le squadre ferme sulla stessa missione da più di 20 minuti sono evidenziate.
+- **Annulla missione completata**: tolgono i punti e la missione torna disponibile. La prova resta
+  nello Storage e nel registro.
+- **Esportazione** (`ProofExport`): uno ZIP per squadra con file dai nomi leggibili + `prove.csv`
+  (anche i testi), creato nel browser. Il download dei file usa un header `x-admin-pin` che la
+  policy dello Storage verifica nel DB: **da provare con `db:start` e un upload vero prima della
+  festa**. Se lo Storage non esponesse l'header, il piano B è una Edge Function di Supabase.
+- Consiglio: fai un'esportazione anche a metà festa, come copia di sicurezza.
 
 ## Test
 
