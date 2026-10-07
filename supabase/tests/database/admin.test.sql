@@ -98,10 +98,6 @@ select is(
   (select score from public.get_leaderboard() where team_id = 3), (select none_points from ctx) + 5,
   'e nella classifica'
 );
-select is(
-  (select score from public.team_scores where team_id = 3), (select none_points from ctx) + 5,
-  'e nella view team_scores'
-);
 select is(public.admin_adjust_points('9999', 3, 0, 'x') ->> 'error', 'invalid_adjustment', 'correzione a 0 rifiutata');
 select is(public.admin_adjust_points('9999', 3, 5, '   ') ->> 'error', 'invalid_adjustment', 'correzione senza motivo rifiutata');
 

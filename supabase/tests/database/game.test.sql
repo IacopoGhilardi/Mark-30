@@ -163,22 +163,22 @@ select is(
 
 -- ------------------------------------------------------------ classifica
 
-select is((select count(*)::int from public.team_scores), 9, 'la classifica ha tutte le squadre');
+select is((select count(*)::int from public.get_leaderboard()), 9, 'la classifica ha tutte le squadre');
 select is(
-  (select score from public.team_scores where team_id = 1), (select photo_points from ctx),
+  (select score from public.get_leaderboard() where team_id = 1), (select photo_points from ctx),
   'classifica: punteggio squadra 1'
 );
 select is(
-  (select completed_missions from public.team_scores where team_id = 1), 1,
+  (select completed_missions from public.get_leaderboard() where team_id = 1), 1,
   'classifica: missioni completate squadra 1'
 );
 select is(
-  (select score from public.team_scores where team_id = 2), 0,
+  (select score from public.get_leaderboard() where team_id = 2), 0,
   'classifica: squadra senza missioni a 0'
 );
 select ok(
-  (select array_agg(score) from public.team_scores)
-    = (select array_agg(score order by score desc) from public.team_scores),
+  (select array_agg(score) from public.get_leaderboard())
+    = (select array_agg(score order by score desc) from public.get_leaderboard()),
   'classifica ordinata per punteggio decrescente'
 );
 
@@ -207,7 +207,7 @@ select throws_ok(
   'anon non può leggere le missioni'
 );
 select lives_ok(
-  $$ select * from public.team_scores $$,
+  $$ select * from public.get_leaderboard() $$,
   'anon può leggere la classifica'
 );
 select lives_ok(
