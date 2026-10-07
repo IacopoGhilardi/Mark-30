@@ -38,6 +38,26 @@ const selectedFile = ref<File | null>(null)
 const isReady = ref(false)
 const currentPosition = ref<number | null>(null)
 
+const fakeSkipClicks = ref(0)
+const showVinceMessage = ref(false)
+
+const vinceMessages = [
+  'BEL TENTATIVO.',
+  'SEI SICURO?',
+  'VINCE TI STA GIUDICANDO.',
+  'LA MISSIONE NON SI SALTA.',
+]
+
+const vinceMessage = computed(() => {
+  const index = Math.min(
+    Math.max(fakeSkipClicks.value - 1, 0),
+    vinceMessages.length - 1
+  )
+
+  return vinceMessages[index]
+})
+
+let vinceTimer: ReturnType<typeof setTimeout> | null = null
 let rankingInterval: ReturnType<typeof setInterval> | null = null
 
 const storageKey = computed(() => {
@@ -300,6 +320,19 @@ function startMission() {
   saveGame()
 }
 
+function fakeSkipMission() {
+  fakeSkipClicks.value += 1
+  showVinceMessage.value = true
+
+  if (vinceTimer) {
+    clearTimeout(vinceTimer)
+  }
+
+  vinceTimer = setTimeout(() => {
+    showVinceMessage.value = false
+  }, 2000)
+}
+
 function completeMission() {
   if (!currentMission.value) return
 
@@ -372,6 +405,9 @@ function nextMission() {
 
       resetProof()
 
+      fakeSkipClicks.value = 0
+      showVinceMessage.value = false
+
       step.value = 'ready'
       saveGame()
     }
@@ -402,6 +438,10 @@ onUnmounted(() => {
 
   if (rankingInterval) {
     clearInterval(rankingInterval)
+  }
+
+  if (vinceTimer) {
+    clearTimeout(vinceTimer)
   }
 })
 
@@ -541,6 +581,43 @@ useHead({
             <span>MISSIONE COMPLETATA</span>
             <span>✓</span>
           </button>
+
+          <button
+            class="vince-skip-button"
+            type="button"
+            @click="fakeSkipMission"
+          >
+            <img
+              src="/images/vince-skip.png"
+              alt="Vince"
+              class="vince-face"
+            >
+
+            <span class="vince-skip-copy">
+              <span class="vince-small">NON AVETE VOGLIA?</span>
+              <strong>SALTA MISSIONE</strong>
+            </span>
+
+            <span class="vince-arrow">→</span>
+          </button>
+
+          <Transition name="vince-pop">
+            <div
+              v-if="showVinceMessage"
+              class="vince-message"
+            >
+              <img
+                src="/images/vince-skip.png"
+                alt="Vince"
+                class="vince-message-face"
+              >
+
+              <div>
+                <p>{{ vinceMessage }}</p>
+                <span>VINCE NON APPROVA.</span>
+              </div>
+            </div>
+          </Transition>
         </div>
 
         <div
@@ -988,6 +1065,113 @@ button {
   background: #222;
   color: #555;
   cursor: not-allowed;
+}
+
+.vince-skip-button {
+  width: 100%;
+  min-height: 78px;
+  margin-top: 14px;
+  padding: 8px 15px 8px 8px;
+
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  border: 1px solid #333;
+  background: #111;
+  color: #f4f4f0;
+
+  text-align: left;
+}
+
+.vince-face {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+
+  object-fit: cover;
+  border-radius: 50%;
+  background: #000;
+}
+
+.vince-skip-copy {
+  min-width: 0;
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vince-small {
+  color: #666;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.vince-skip-copy strong {
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+}
+
+.vince-arrow {
+  color: #666;
+  font-size: 18px;
+}
+
+.vince-message {
+  margin-top: 14px;
+  padding: 13px;
+
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  border: 1px solid #f4f4f0;
+  background: #f4f4f0;
+  color: #090909;
+}
+
+.vince-message-face {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+
+  object-fit: cover;
+  border-radius: 50%;
+  background: #000;
+}
+
+.vince-message p {
+  margin: 0;
+
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+}
+
+.vince-message span {
+  display: block;
+  margin-top: 4px;
+
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.vince-pop-enter-active,
+.vince-pop-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.vince-pop-enter-from,
+.vince-pop-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
 }
 
 .proof-area {
