@@ -27,6 +27,7 @@ const team = computed(() => {
 const score = ref(0)
 const missionNumber = ref(1)
 const step = ref<GameStep>('ready')
+const showGameIntro = ref(true)
 
 const completedMissionIds = ref<number[]>([])
 const currentMission = ref<Mission | null>(null)
@@ -195,6 +196,7 @@ const proofIsValid = computed(() => {
 // interfaccia: a che punto della missione si è (iniziata/prova) e la bozza del testo.
 
 const uiKey = computed(() => `marcos30-ui-${teamId.value}`)
+const introKey = computed(() => `marcos30-intro-${teamId.value}`)
 const draftKey = (missionId: number) => `marcos30-draft-${teamId.value}-${missionId}`
 
 function readLocal(key: string): string | null {
@@ -260,6 +262,11 @@ function resetProof() {
 
 function loadDraft(missionId: number) {
   textProof.value = readLocal(draftKey(missionId)) ?? ''
+}
+
+function enterGame() {
+  showGameIntro.value = false
+  writeLocal(introKey.value, '1')
 }
 
 // ---------------------------------------------------------------- stato dal server
@@ -388,6 +395,12 @@ async function loadInitial() {
     )
 
     gameStatus.value = status
+
+    // Le regole si vedono la prima volta; chi ricarica o rientra non le rivede
+    if (readLocal(introKey.value) === '1') {
+      showGameIntro.value = false
+    }
+
     await withLoader(() => applyState(next), 'PREPARAZIONE MISSIONE...')
     await refreshPosition().catch(() => undefined)
     isReady.value = true
@@ -633,6 +646,7 @@ useHead({
       </header>
 
       <NuxtLink
+        v-if="!showGameIntro"
         to="/classifica"
         class="leaderboard-link"
       >
@@ -658,7 +672,67 @@ useHead({
       </p>
 
       <section
-        v-if="step === 'finished'"
+        v-if="showGameIntro"
+        class="game-intro"
+      >
+        <p class="intro-eyebrow">
+          REGOLE DEL GIOCO
+        </p>
+
+        <h1>
+          AVETE TUTTA<br>
+          LA CENA.
+        </h1>
+
+        <p class="intro-copy">
+          Le missioni possono arrivare in qualsiasi momento.
+          Giocate, mangiate, bevete e aspettate il momento giusto.
+        </p>
+
+        <div class="intro-rule">
+          <span class="intro-emoji">👀</span>
+
+          <div>
+            <strong>NON FATEVI SGAMARE.</strong>
+            <p>
+              Le altre squadre non devono capire
+              quali sono le vostre missioni.
+            </p>
+          </div>
+        </div>
+
+        <div class="intro-rule">
+          <span class="intro-emoji">🎂</span>
+
+          <div>
+            <strong>AVETE TEMPO FINO ALLA TORTA.</strong>
+            <p>
+              Quando arriva la torta, il gioco finisce.
+            </p>
+          </div>
+        </div>
+
+        <p class="intro-score">
+          PIÙ MISSIONI COMPLETATE,<br>
+          PIÙ PUNTI CONQUISTATE.
+        </p>
+
+        <button
+          class="primary-button intro-button"
+          type="button"
+          @click="enterGame"
+        >
+          <span>INIZIA IL GIOCO</span>
+          <span>→</span>
+        </button>
+
+        <p class="intro-luck">
+          BUONA FORTUNA.
+        </p>
+      </section>
+
+      <section
+        v-else-if="step === 'finished'"
         class="mission"
       >
         <template v-if="allDone">
@@ -1730,4 +1804,91 @@ button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+.game-intro {
+  padding: 10px 0 6px;
+}
+
+.intro-eyebrow {
+  margin: 0 0 18px;
+  color: #666;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+}
+
+.game-intro h1 {
+  margin: 0;
+  color: #f4f4f0;
+  font-size: clamp(38px, 12vw, 58px);
+  font-weight: 950;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+}
+
+.intro-copy {
+  max-width: 360px;
+  margin: 24px 0 25px;
+  color: #999;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.intro-rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 0;
+  border-top: 1px solid #292929;
+}
+
+.intro-rule:nth-of-type(2) {
+  border-bottom: 1px solid #292929;
+}
+
+.intro-emoji {
+  flex: 0 0 27px;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.intro-rule strong {
+  display: block;
+  color: #f4f4f0;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.intro-rule p {
+  margin: 6px 0 0;
+  color: #777;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.intro-score {
+  margin: 22px 0;
+  color: #f4f4f0;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1.55;
+  letter-spacing: 0.1em;
+}
+
+.intro-button {
+  margin-top: 4px;
+}
+
+.intro-luck {
+  margin: 18px 0 0;
+  color: #555;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: 0.2em;
+}
+
 </style>
