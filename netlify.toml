@@ -1,3 +1,12 @@
 [build]
   command = "npm run generate"
   publish = ".output/public"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Il sito è privato: niente indicizzazione dai motori di ricerca
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

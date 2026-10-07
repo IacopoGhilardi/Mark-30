@@ -221,15 +221,56 @@ npm run test:all   # entrambi
 - `supabase/tests/database/` contiene i test pgTAP: punti, idempotenza, missione unica,
   validazione delle prove, classifica e permessi del ruolo `anon`.
 
-## Build e deploy
+## Messa online (prima demo)
+
+Servono un progetto Supabase e un sito Netlify, entrambi gratuiti. Le variabili Nuxt sono
+**incorporate nella build**: se le cambi, rifai il deploy.
+
+### 1. Supabase
+
+1. [supabase.com](https://supabase.com) > New project. **Regione europea** (Frankfurt): meno latenza
+   e non si cambia dopo. Salva la password del database.
+2. Project Settings > API: copia **Project URL** e la chiave **anon public**.
+3. Dal terminale, nella cartella del progetto:
+   ```bash
+   npx supabase login        # apre il browser
+   npm run db:link           # chiede il project ref (nell'URL del progetto) e la password del DB
+   npm run db:push           # applica tutte le migrations
+   ```
+4. SQL editor: imposta i due PIN veri (vedi "Aree admin"). Le migrations non li creano.
+5. Controlla: Table editor > `teams` (9 righe) e `missions` (60); Storage > bucket `proofs` (privato).
+
+### 2. Netlify
+
+1. Add new site > Import from GitHub > scegli il repository, branch `main`. Build e cartella
+   di pubblicazione arrivano da `netlify.toml`.
+2. Site configuration > Environment variables:
+   - `NUXT_PUBLIC_SUPABASE_URL` = Project URL
+   - `NUXT_PUBLIC_SUPABASE_ANON_KEY` = chiave anon
+3. Deploy. Per un nome più bello: Site configuration > Change site name.
+
+### 3. Verifica rapida
+
+1. `https://<sito>.netlify.app/classifica` mostra le 9 squadre a 0 punti.
+2. `/irenegade/admin` con il PIN di Irene: sezione QR delle squadre (generati con l'indirizzo del sito).
+3. Da un telefono, inquadra il QR di una squadra e fai una missione con foto.
+4. Torna in `/irenegade/admin`: spazio usato, missione completata, classifica aggiornata.
+5. `/mark30/admin`: prova a fermare il gioco e guarda il telefono della squadra.
+
+### 4. Prima del gioco vero
+
+Dopo i test: `/irenegade/admin` > ZONA PERICOLOSA > **AZZERA TUTTO IL GIOCO** e **SVUOTA FOTO E VIDEO**
+(doppia conferma). Squadre e missioni restano.
+
+## Build e deploy (dettagli)
 
 ```bash
 npm run generate   # build statica in .output/public
 npm run preview
 ```
 
-Su Netlify: build `npm run generate`, publish `.output/public` (già in `netlify.toml`).
-`public/_redirects` serve il fallback SPA per le rotte dinamiche come `/play/7`.
+`netlify.toml` imposta Node 22 e l'header `noindex` (il sito è privato). `public/_redirects` serve il
+fallback SPA per le rotte dinamiche come `/play/7`.
 
 ## Prima della festa
 
