@@ -1,16 +1,6 @@
 <script setup lang="ts">
 import { teams } from '../datas/teams'
 
-type GameStep = 'ready' | 'active' | 'proof' | 'completed'
-
-type SavedGameState = {
-  score: number
-  missionNumber: number
-  step: GameStep
-  completedMissionIds: number[]
-  currentMissionId: number | null
-}
-
 type LeaderboardTeam = {
   id: number
   name: string
@@ -22,84 +12,47 @@ type LeaderboardTeam = {
 const leaderboard = ref<LeaderboardTeam[]>([])
 const lastUpdated = ref('')
 const totalCompleted = ref(0)
+const hasError = ref(false)
 
-let refreshInterval: ReturnType<typeof setInterval> | null = null
-
-function getTeamState(teamId: number): SavedGameState | null {
-  if (!import.meta.client) return null
-
-  const key = `marcos30-team-${teamId}`
-  const raw = localStorage.getItem(key)
-
-  if (!raw) {
-    return null
-  }
-
+async function refreshLeaderboard() {
   try {
-    return JSON.parse(raw) as SavedGameState
+    // loader solo al primo caricamento, poi aggiornamenti silenziosi
+    const rows = leaderboard.value.length
+      ? await getLeaderboard()
+      : await withLoader(() => getLeaderboard(), 'CARICO LA CLASSIFICA...')
+
+    leaderboard.value = rows.map((row) => ({
+      id: row.teamId,
+      name: row.name,
+      score: row.score,
+      completed: row.completedMissions,
+      position: row.position,
+    }))
+
+    totalCompleted.value = rows.reduce(
+      (total, row) => total + row.completedMissions,
+      0
+    )
+
+    lastUpdated.value = new Date().toLocaleTimeString('it-IT', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+
+    hasError.value = false
   } catch {
-    return null
+    // si tiene l'ultima classifica nota e si riprova al prossimo giro
+    hasError.value = true
   }
 }
 
-function refreshLeaderboard() {
-  const results = teams.map((team) => {
-    const savedState = getTeamState(team.id)
-
-    return {
-      id: team.id,
-      name: team.name,
-      score: savedState?.score ?? 0,
-      completed: savedState?.completedMissionIds?.length ?? 0,
-    }
-  })
-
-  results.sort((a, b) => {
-    if (b.score !== a.score) {
-      return b.score - a.score
-    }
-
-    if (b.completed !== a.completed) {
-      return b.completed - a.completed
-    }
-
-    return a.id - b.id
-  })
-
-  leaderboard.value = results.map((team, index) => ({
-    ...team,
-    position: index + 1,
-  }))
-
-  totalCompleted.value = results.reduce(
-    (total, team) => total + team.completed,
-    0
-  )
-
-  lastUpdated.value = new Date().toLocaleTimeString('it-IT', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
+// Primo caricamento con il loader, poi aggiornamenti silenziosi ogni 5 secondi
+usePolling(refreshLeaderboard, 5000)
 
 function positionLabel(position: number) {
   return String(position).padStart(2, '0')
 }
-
-onMounted(() => {
-  refreshLeaderboard()
-
-  refreshInterval = setInterval(() => {
-    refreshLeaderboard()
-  }, 1500)
-})
-
-onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-  }
-})
 
 useHead({
   title: "Live Leaderboard — Marco's 30th",
@@ -214,7 +167,7 @@ useHead({
       <footer>
         <div class="footer-live">
           <span class="live-dot small"></span>
-          CLASSIFICA IN AGGIORNAMENTO
+          {{ hasError ? 'CONNESSIONE INSTABILE · RIPROVO' : 'CLASSIFICA IN AGGIORNAMENTO' }}
         </div>
 
         <p>

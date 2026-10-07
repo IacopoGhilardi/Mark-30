@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { teams } from '../../../datas/teams'
-import {
-  activeMissions,
-  type Mission,
-} from '../../../datas/missions'
+import type { Mission } from '../../../datas/missions'
+import type { GameStatus } from '../../../types/admin'
+import type {
+  ActiveMission,
+  CompletedMission,
+  TeamState,
+} from '../../../types/game'
 
-type GameStep = 'ready' | 'active' | 'proof' | 'completed'
+// ready: missione mostrata | active: in corso | proof: invio prova
+// completed: appena completata | finished: nessuna missione nuova
+type GameStep = 'ready' | 'active' | 'proof' | 'completed' | 'finished'
 
-type SavedGameState = {
-  score: number
-  missionNumber: number
-  step: GameStep
-  completedMissionIds: number[]
-  currentMissionId: number | null
-}
+// Al quinto tocco su "salta" Vince cede e la missione cambia davvero.
+const SKIP_AFTER_CLICKS = 5
 
 const route = useRoute()
-const { showLoader, hideLoader } = useAppLoader()
+const { hideLoader } = useAppLoader()
 
 const teamId = computed(() => Number(route.params.teamId))
 
@@ -30,13 +30,21 @@ const step = ref<GameStep>('ready')
 
 const completedMissionIds = ref<number[]>([])
 const currentMission = ref<Mission | null>(null)
+const teamState = ref<TeamState | null>(null)
 
 const textProof = ref('')
 const selectedFileName = ref('')
 const selectedFile = ref<File | null>(null)
 
 const isReady = ref(false)
+const loadError = ref('')
+const errorMessage = ref('')
+const busy = ref(false)
 const currentPosition = ref<number | null>(null)
+const gameStatus = ref<GameStatus>({
+  missionsEnabled: true,
+  playEnabled: true,
+})
 
 const fakeSkipClicks = ref(0)
 const showVinceMessage = ref(false)
@@ -46,6 +54,7 @@ const vinceMessages = [
   'SEI SICURO?',
   'VINCE TI STA GIUDICANDO.',
   'LA MISSIONE NON SI SALTA.',
+  'VA BENE. CAMBIO.',
 ]
 
 const vinceMessage = computed(() => {
@@ -58,11 +67,13 @@ const vinceMessage = computed(() => {
 })
 
 let vinceTimer: ReturnType<typeof setTimeout> | null = null
-let rankingInterval: ReturnType<typeof setInterval> | null = null
 
-const storageKey = computed(() => {
-  return `marcos30-team-${teamId.value}`
-})
+const playPaused = computed(() => !gameStatus.value.playEnabled)
+const missionsPaused = computed(
+  () => playPaused.value || !gameStatus.value.missionsEnabled
+)
+const allDone = computed(() => Boolean(teamState.value?.allDone))
+const skippedMissions = computed(() => teamState.value?.skippedMissions ?? [])
 
 const categoryIcon = computed(() => {
   if (!currentMission.value) return '●'
@@ -179,135 +190,67 @@ const proofIsValid = computed(() => {
   return true
 })
 
-function pickRandomMission(): Mission | null {
-  const available = activeMissions.filter(
-    (mission) => !completedMissionIds.value.includes(mission.id)
-  )
+// ---------------------------------------------------------------- stato locale
+// Lo stato del gioco sta nel DB. Nel telefono resta solo ciò che è di
+// interfaccia: a che punto della missione si è (iniziata/prova) e la bozza del testo.
 
-  if (available.length === 0) {
-    return null
-  }
+const uiKey = computed(() => `marcos30-ui-${teamId.value}`)
+const draftKey = (missionId: number) => `marcos30-draft-${teamId.value}-${missionId}`
 
-  const randomIndex = Math.floor(
-    Math.random() * available.length
-  )
-
-  return available[randomIndex] ?? null
-}
-
-function saveGame() {
-  if (!import.meta.client) return
-  if (!team.value) return
-  if (!isReady.value) return
-
-  const state: SavedGameState = {
-    score: score.value,
-    missionNumber: missionNumber.value,
-    step: step.value,
-    completedMissionIds: [...completedMissionIds.value],
-    currentMissionId: currentMission.value?.id ?? null,
-  }
-
-  localStorage.setItem(
-    storageKey.value,
-    JSON.stringify(state)
-  )
-
-  updatePosition()
-}
-
-function restoreGame(): boolean {
-  if (!import.meta.client) return false
-
-  const raw = localStorage.getItem(storageKey.value)
-
-  if (!raw) {
-    return false
-  }
-
+function readLocal(key: string): string | null {
   try {
-    const saved = JSON.parse(raw) as SavedGameState
-
-    score.value = saved.score ?? 0
-    missionNumber.value = saved.missionNumber ?? 1
-    step.value = saved.step ?? 'ready'
-
-    completedMissionIds.value = Array.isArray(
-      saved.completedMissionIds
-    )
-      ? saved.completedMissionIds
-      : []
-
-    if (saved.currentMissionId) {
-      currentMission.value =
-        activeMissions.find(
-          (mission) => mission.id === saved.currentMissionId
-        ) ?? null
-    }
-
-    return Boolean(currentMission.value)
-  } catch {
-    localStorage.removeItem(storageKey.value)
-    return false
-  }
-}
-
-function createNewGame() {
-  score.value = 0
-  missionNumber.value = 1
-  completedMissionIds.value = []
-  currentMission.value = pickRandomMission()
-  step.value = 'ready'
-}
-
-function getSavedTeamState(teamToRead: number): SavedGameState | null {
-  if (!import.meta.client) return null
-
-  const raw = localStorage.getItem(
-    `marcos30-team-${teamToRead}`
-  )
-
-  if (!raw) return null
-
-  try {
-    return JSON.parse(raw) as SavedGameState
+    return localStorage.getItem(key)
   } catch {
     return null
   }
 }
 
-function updatePosition() {
-  if (!import.meta.client) return
-  if (!team.value) return
-
-  const ranking = teams.map((item) => {
-    const savedState = getSavedTeamState(item.id)
-
-    return {
-      id: item.id,
-      score: savedState?.score ?? 0,
-      completed: savedState?.completedMissionIds?.length ?? 0,
+function writeLocal(key: string, value: string | null) {
+  try {
+    if (value === null) {
+      localStorage.removeItem(key)
+    } else {
+      localStorage.setItem(key, value)
     }
-  })
-
-  ranking.sort((a, b) => {
-    if (b.score !== a.score) {
-      return b.score - a.score
-    }
-
-    if (b.completed !== a.completed) {
-      return b.completed - a.completed
-    }
-
-    return a.id - b.id
-  })
-
-  const index = ranking.findIndex(
-    (item) => item.id === teamId.value
-  )
-
-  currentPosition.value = index >= 0 ? index + 1 : null
+  } catch {
+    // storage non disponibile: si perde solo la comodità del ripristino
+  }
 }
+
+function saveUi() {
+  const mission = currentMission.value
+
+  if (
+    mission &&
+    (step.value === 'ready' || step.value === 'active' || step.value === 'proof')
+  ) {
+    writeLocal(uiKey.value, JSON.stringify({ missionId: mission.id, step: step.value }))
+  } else {
+    writeLocal(uiKey.value, null)
+  }
+}
+
+// Rientrando sulla stessa missione si riprende dal punto salvato. Da un altro
+// telefono (niente stato locale) si riparte da "in corso".
+function restoreStep(missionId: number, fallback: 'ready' | 'active') {
+  try {
+    const saved = JSON.parse(readLocal(uiKey.value) ?? 'null')
+
+    if (saved?.missionId === missionId && ['ready', 'active', 'proof'].includes(saved.step)) {
+      return saved.step as 'ready' | 'active' | 'proof'
+    }
+  } catch {
+    // stato locale illeggibile: si ignora
+  }
+
+  return fallback
+}
+
+watch(textProof, (value) => {
+  if (step.value === 'proof' && currentMission.value) {
+    writeLocal(draftKey(currentMission.value.id), value || null)
+  }
+})
 
 function resetProof() {
   textProof.value = ''
@@ -315,25 +258,184 @@ function resetProof() {
   selectedFile.value = null
 }
 
-function startMission() {
-  step.value = 'active'
-  saveGame()
+function loadDraft(missionId: number) {
+  textProof.value = readLocal(draftKey(missionId)) ?? ''
 }
 
-function fakeSkipMission() {
-  fakeSkipClicks.value += 1
-  showVinceMessage.value = true
+// ---------------------------------------------------------------- stato dal server
 
-  if (vinceTimer) {
-    clearTimeout(vinceTimer)
+const toMission = (mission: ActiveMission) =>
+  ({ ...mission, active: true }) as Mission
+
+// La schermata "completata" di un altro telefono ricostruita dall'ultimo completamento.
+const fromCompleted = (completed: CompletedMission) =>
+  ({
+    id: completed.missionId,
+    title: completed.title,
+    category: completed.category,
+    text: '',
+    proofType: 'none',
+    points: completed.points,
+    requiresMarco: false,
+    active: true,
+  }) as Mission
+
+// Allinea l'interfaccia allo stato del server. `fresh` indica una missione
+// appena assegnata (si parte da "ready"), altrimenti si riprende da "active".
+async function applyState(
+  next: TeamState,
+  options: { fresh?: boolean; silent?: boolean; advance?: boolean } = {}
+) {
+  teamState.value = next
+  score.value = next.score
+  missionNumber.value = next.missionNumber
+  completedMissionIds.value = next.completedMissionIds
+
+  if (next.activeMission) {
+    const sameMission = currentMission.value?.id === next.activeMission.id
+    const inProgress =
+      step.value === 'ready' || step.value === 'active' || step.value === 'proof'
+
+    currentMission.value = toMission(next.activeMission)
+
+    if (!(sameMission && inProgress)) {
+      resetProof()
+      fakeSkipClicks.value = 0
+      showVinceMessage.value = false
+      step.value = restoreStep(next.activeMission.id, options.fresh ? 'ready' : 'active')
+
+      if (step.value === 'proof') {
+        loadDraft(next.activeMission.id)
+      }
+
+      saveUi()
+    }
+
+    return
   }
 
-  vinceTimer = setTimeout(() => {
-    showVinceMessage.value = false
-  }, 2000)
+  // nessuna missione attiva per il server. Se la squadra sta guardando la
+  // schermata "completata" ci resta, finché non chiede la prossima (advance).
+  if (step.value === 'completed' && currentMission.value && !options.advance) {
+    return
+  }
+
+  if (next.canRedrawSkipped || next.allDone) {
+    currentMission.value = null
+    step.value = 'finished'
+    saveUi()
+    return
+  }
+
+  if (next.completedMissionIds.length > 0) {
+    // squadra che rientra dopo una missione completata (anche da un altro telefono)
+    const [last] = await getCompletedMissions({ teamId: teamId.value, limit: 1 })
+
+    if (last) {
+      currentMission.value = fromCompleted(last)
+      step.value = 'completed'
+      saveUi()
+      return
+    }
+  }
+
+  // squadra nuova (o azzerata da un admin): si estrae la prima missione
+  try {
+    await applyState(await drawMission(teamId.value), { fresh: true, silent: options.silent })
+  } catch (error) {
+    if (!options.silent) {
+      errorMessage.value = gameErrorMessage(error)
+    }
+  }
 }
 
-function completeMission() {
+async function refreshPosition() {
+  const rows = await getLeaderboard()
+  const mine = rows.find((row) => row.teamId === teamId.value)
+
+  currentPosition.value = mine?.position ?? null
+}
+
+// Aggiornamento silenzioso: tiene allineati più telefoni della stessa squadra,
+// la pausa del gioco e la posizione. Salta se c'è un'azione in corso.
+async function syncFromServer() {
+  if (!isReady.value || busy.value || !team.value) return
+
+  try {
+    const [next, status] = await Promise.all([
+      getTeamState(teamId.value),
+      getGameStatus(),
+      refreshPosition(),
+    ])
+
+    gameStatus.value = status
+
+    if (!busy.value) {
+      await applyState(next, { silent: true })
+    }
+  } catch {
+    // rete assente: si riprova al prossimo giro
+  }
+}
+
+async function loadInitial() {
+  loadError.value = ''
+
+  try {
+    const [next, status] = await withLoader(
+      () => Promise.all([getTeamState(teamId.value), getGameStatus()]),
+      'PREPARAZIONE MISSIONE...'
+    )
+
+    gameStatus.value = status
+    await withLoader(() => applyState(next), 'PREPARAZIONE MISSIONE...')
+    await refreshPosition().catch(() => undefined)
+    isReady.value = true
+  } catch (error) {
+    loadError.value = gameErrorMessage(error)
+  }
+}
+
+// ---------------------------------------------------------------- azioni
+
+// Esegue un'azione sul server mostrando il loader. Su errore mostra un messaggio
+// chiaro; se il telefono era rimasto indietro ricarica lo stato.
+async function runAction(
+  task: () => Promise<TeamState>,
+  loaderText: string,
+  options: { fresh?: boolean; advance?: boolean } = {}
+) {
+  if (busy.value) return false
+
+  busy.value = true
+  errorMessage.value = ''
+
+  try {
+    const next = await withLoader(task, loaderText)
+    await applyState(next, options)
+    refreshPosition().catch(() => undefined)
+
+    return true
+  } catch (error) {
+    errorMessage.value = gameErrorMessage(error)
+
+    if (isStaleError(error)) {
+      busy.value = false
+      await syncFromServer()
+    }
+
+    return false
+  } finally {
+    busy.value = false
+  }
+}
+
+function startMission() {
+  step.value = 'active'
+  saveUi()
+}
+
+function markMissionDone() {
   if (!currentMission.value) return
 
   if (currentMission.value.proofType === 'none') {
@@ -341,15 +443,36 @@ function completeMission() {
     return
   }
 
+  errorMessage.value = ''
   step.value = 'proof'
-  saveGame()
+  loadDraft(currentMission.value.id)
+  saveUi()
 }
 
-function handleFile(event: Event) {
+async function handleFile(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
 
   if (!file) return
+
+  errorMessage.value = ''
+
+  if (file.type.startsWith('video/')) {
+    if (file.size > MAX_PROOF_BYTES) {
+      errorMessage.value =
+        'Il video pesa troppo (max 20 MB). Registratene uno di 10 secondi in 1080p.'
+      input.value = ''
+      return
+    }
+
+    const seconds = await getVideoDuration(file)
+
+    if (seconds !== null && seconds > MAX_VIDEO_SECONDS) {
+      errorMessage.value = `Il video dura ${Math.round(seconds)} secondi: massimo 10.`
+      input.value = ''
+      return
+    }
+  }
 
   selectedFile.value = file
   selectedFileName.value = file.name
@@ -371,74 +494,101 @@ function skipOptionalProof() {
     return
   }
 
+  resetProof()
   finishMission()
 }
 
-function finishMission() {
-  if (!currentMission.value) return
+async function finishMission() {
+  const mission = currentMission.value
 
-  if (
-    !completedMissionIds.value.includes(
-      currentMission.value.id
-    )
-  ) {
-    completedMissionIds.value.push(
-      currentMission.value.id
-    )
+  if (!mission || busy.value) return
 
-    score.value += currentMission.value.points
+  const proof = {
+    text: textProof.value.trim() || null,
+    file: selectedFile.value,
   }
 
-  step.value = 'completed'
-  saveGame()
+  // Resta su "proof" finché il server non conferma: se l'invio fallisce
+  // (rete, upload) la squadra riprova senza perdere testo o file scelto.
+  const done = await runAction(
+    async () => {
+      step.value = 'proof'
+      const next = await completeMission(teamId.value, mission.id, proof)
+      step.value = 'completed'
+      return next
+    },
+    proof.file
+      ? 'INVIO DELLA PROVA... RESTA SU QUESTA PAGINA'
+      : 'INVIO DELLA PROVA...'
+  )
+
+  if (done) {
+    writeLocal(draftKey(mission.id), null)
+    resetProof()
+    saveUi()
+  } else if (step.value === 'completed') {
+    step.value = 'proof'
+  }
 }
 
 function nextMission() {
-  showLoader('ESTRAZIONE NUOVA MISSIONE...')
-
-  window.setTimeout(() => {
-    const next = pickRandomMission()
-
-    if (next) {
-      currentMission.value = next
-      missionNumber.value += 1
-
-      resetProof()
-
-      fakeSkipClicks.value = 0
-      showVinceMessage.value = false
-
-      step.value = 'ready'
-      saveGame()
-    }
-
-    hideLoader()
-  }, 1100)
+  return runAction(
+    () => drawMission(teamId.value),
+    'ESTRAZIONE NUOVA MISSIONE...',
+    { fresh: true, advance: true }
+  )
 }
 
-onMounted(() => {
-  const restored = restoreGame()
+function redrawSkipped(missionId?: number) {
+  return runAction(
+    () => redrawSkippedMission(teamId.value, missionId),
+    'RECUPERO LA MISSIONE...',
+    { fresh: true, advance: true }
+  )
+}
 
-  if (!restored) {
-    createNewGame()
+// Il salto di Vince: i primi tentativi sono una presa in giro, al quinto
+// Vince cede e la missione cambia davvero.
+function trySkipMission() {
+  fakeSkipClicks.value += 1
+  showVinceMessage.value = true
+
+  if (vinceTimer) {
+    clearTimeout(vinceTimer)
   }
 
-  isReady.value = true
+  vinceTimer = setTimeout(() => {
+    showVinceMessage.value = false
+  }, 2000)
 
-  saveGame()
-  updatePosition()
+  if (fakeSkipClicks.value >= SKIP_AFTER_CLICKS && currentMission.value) {
+    const mission = currentMission.value
 
-  rankingInterval = setInterval(() => {
-    updatePosition()
-  }, 1500)
+    skipCurrentMission(mission.id)
+  }
+}
+
+function skipCurrentMission(missionId: number) {
+  return runAction(
+    () => skipMission(teamId.value, missionId),
+    'VINCE STA CAMBIANDO LA MISSIONE...',
+    { fresh: true }
+  )
+}
+
+// Sincronizzazione con il server ogni 10 secondi, solo con la scheda visibile
+usePolling(syncFromServer, 10000)
+
+onMounted(() => {
+  if (team.value) {
+    loadInitial()
+  } else {
+    isReady.value = true
+  }
 })
 
 onUnmounted(() => {
   hideLoader()
-
-  if (rankingInterval) {
-    clearInterval(rankingInterval)
-  }
 
   if (vinceTimer) {
     clearTimeout(vinceTimer)
@@ -457,7 +607,7 @@ useHead({
 <template>
   <main class="game-page">
     <section
-      v-if="team && currentMission && isReady"
+      v-if="team && isReady && !loadError && (currentMission || step === 'finished')"
       class="game-shell"
     >
       <header class="topbar">
@@ -495,7 +645,74 @@ useHead({
 
       <div class="separator"></div>
 
-      <section class="mission">
+      <p
+        v-if="playPaused || missionsPaused"
+        class="pause-banner"
+        role="status"
+      >
+        {{
+          playPaused
+            ? 'GIOCO IN PAUSA. ASPETTATE CHE RIPARTA.'
+            : 'NUOVE MISSIONI IN PAUSA. ASPETTATE CHE RIPARTANO.'
+        }}
+      </p>
+
+      <section
+        v-if="step === 'finished'"
+        class="mission"
+      >
+        <template v-if="allDone">
+          <h1>AVETE FINITO<br>TUTTE LE MISSIONI.</h1>
+
+          <p class="mission-text">
+            Siete leggende. Ora godetevi la festa.
+          </p>
+        </template>
+
+        <template v-else>
+          <h1>MISSIONI NUOVE<br>FINITE.</h1>
+
+          <p class="mission-text">
+            Potete riprovare una di quelle che avete scartato.
+          </p>
+
+          <div class="action-area">
+            <button
+              v-for="skipped in skippedMissions"
+              :key="skipped.id"
+              class="skip-button"
+              type="button"
+              :disabled="busy || missionsPaused"
+              @click="redrawSkipped(skipped.id)"
+            >
+              {{ skipped.title }} · +{{ skipped.points }} PT
+            </button>
+
+            <button
+              class="primary-button"
+              type="button"
+              :disabled="busy || missionsPaused"
+              @click="redrawSkipped()"
+            >
+              <span>DAMMENE UNA A CASO</span>
+              <span>→</span>
+            </button>
+
+            <p
+              v-if="errorMessage"
+              class="game-error"
+              role="alert"
+            >
+              {{ errorMessage }}
+            </p>
+          </div>
+        </template>
+      </section>
+
+      <section
+        v-else-if="currentMission"
+        class="mission"
+      >
         <div class="mission-meta">
           <span>
             MISSIONE
@@ -517,7 +734,10 @@ useHead({
 
         <h1>{{ currentMission.title }}</h1>
 
-        <p class="mission-text">
+        <p
+          v-if="currentMission.text"
+          class="mission-text"
+        >
           {{ currentMission.text }}
         </p>
 
@@ -576,7 +796,8 @@ useHead({
           <button
             class="primary-button"
             type="button"
-            @click="completeMission"
+            :disabled="playPaused"
+            @click="markMissionDone"
           >
             <span>MISSIONE COMPLETATA</span>
             <span>✓</span>
@@ -585,7 +806,8 @@ useHead({
           <button
             class="vince-skip-button"
             type="button"
-            @click="fakeSkipMission"
+            :disabled="missionsPaused"
+            @click="trySkipMission"
           >
             <img
               src="/images/vince-skip.png"
@@ -600,6 +822,14 @@ useHead({
 
             <span class="vince-arrow">→</span>
           </button>
+
+          <p
+            v-if="errorMessage"
+            class="game-error"
+            role="alert"
+          >
+            {{ errorMessage }}
+          </p>
 
           <Transition name="vince-pop">
             <div
@@ -699,8 +929,8 @@ useHead({
 
           <button
             class="primary-button"
-            :class="{ disabled: !proofIsValid }"
-            :disabled="!proofIsValid"
+            :class="{ disabled: !proofIsValid || playPaused }"
+            :disabled="!proofIsValid || busy || playPaused"
             type="button"
             @click="submitProof"
           >
@@ -714,6 +944,14 @@ useHead({
 
             <span>→</span>
           </button>
+
+          <p
+            v-if="errorMessage"
+            class="game-error"
+            role="alert"
+          >
+            {{ errorMessage }}
+          </p>
 
           <button
             v-if="
@@ -753,9 +991,18 @@ useHead({
             Questa finirà nei ricordi di Marco. 👀
           </p>
 
+          <p
+            v-if="errorMessage"
+            class="game-error"
+            role="alert"
+          >
+            {{ errorMessage }}
+          </p>
+
           <button
             class="primary-button"
             type="button"
+            :disabled="busy || missionsPaused"
             @click="nextMission"
           >
             <span>
@@ -793,6 +1040,24 @@ useHead({
       <NuxtLink to="/">
         TORNA ALL'INIZIO
       </NuxtLink>
+    </section>
+
+    <section
+      v-else-if="loadError"
+      class="error-screen"
+    >
+      <p>OPS</p>
+
+      <h1>
+        {{ loadError }}
+      </h1>
+
+      <a
+        href="#"
+        @click.prevent="loadInitial"
+      >
+        RIPROVA
+      </a>
     </section>
 
     <section
@@ -1433,5 +1698,36 @@ footer {
     background: transparent;
     color: #f4f4f0;
   }
+}
+
+.pause-banner {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+
+  border: 1px solid #ffb454;
+  color: #ffb454;
+
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.game-error {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+
+  border: 1px solid #ff7a7a;
+  color: #ff7a7a;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 </style>

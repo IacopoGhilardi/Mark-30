@@ -90,8 +90,18 @@ const board = await getLeaderboard()
 `withLoader` mostra l'overlay di caricamento (`AppLoader`, in `app.vue`) per la durata
 della chiamata. Non usarlo per il polling della classifica.
 
-> Stato attuale: backend e funzioni in `app/api/` sono pronti, ma `game.vue` e
-> `classifica.vue` usano ancora `localStorage` e vanno collegati.
+### Pagine collegate al backend
+
+- `game.vue`: all'apertura legge lo stato dal DB (`getTeamState`); se la squadra è nuova estrae la
+  prima missione. Le azioni (`completeMission`, `drawMission`, `skipMission`,
+  `redrawSkippedMission`) passano da `withLoader`. Ogni 10 secondi, con la scheda visibile,
+  allinea stato, pausa del gioco e posizione, così più telefoni della stessa squadra restano
+  coerenti. Nel telefono restano solo il punto della missione (iniziata/prova) e la bozza del testo.
+- **Salto di Vince**: i primi 4 tocchi sono la presa in giro, al 5° Vince cede e la missione cambia
+  davvero (`SKIP_AFTER_CLICKS` in `game.vue`). Finite le missioni nuove la squadra può riprenderne
+  una scartata (a scelta o a caso).
+- Video: si controllano durata (max 10 s) e peso (max 20 MB) prima dell'upload.
+- `classifica.vue`: `getLeaderboard()` ogni 5 secondi, con loader solo al primo caricamento.
 
 ## Setup
 
