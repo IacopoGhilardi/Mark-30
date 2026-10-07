@@ -103,19 +103,19 @@ describe('withLoader', () => {
   })
 
   it('se parte un\'altra chiamata durante l\'attesa il loader resta', async () => {
-    await withLoader(async () => 'prima')
+    await withLoader(async () => 'prima') // nasconderebbe il loader a t = 2000
     await vi.advanceTimersByTimeAsync(300)
 
     const second = withLoader(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 5000))
     })
 
+    // a t = 2300 è scaduta l'attesa della prima chiamata, ma la seconda è ancora in corso
     await vi.advanceTimersByTimeAsync(LOADER_MIN_MS)
     expect(hideLoader).not.toHaveBeenCalled()
 
-    await vi.advanceTimersByTimeAsync(1000)
+    await vi.advanceTimersByTimeAsync(3000)
     await second
-    await vi.advanceTimersByTimeAsync(LOADER_MIN_MS)
     expect(hideLoader).toHaveBeenCalledTimes(1)
   })
 })
