@@ -197,6 +197,12 @@ on conflict (role) do update set pin_hash = excluded.pin_hash;
 - **Stop al gioco**: con il gioco fermo le squadre vedono una schermata "STOP AL GIOCO — FERMI TUTTI"
   con posizione, punti e link alla classifica; riparte da sola entro 10 secondi dal riavvio. Con
   solo le nuove missioni ferme resta un avviso e si può finire quella in corso.
+- **Reset prima della festa** (solo Irene, "ZONA PERICOLOSA"): "AZZERA TUTTO IL GIOCO" cancella missioni,
+  punti e correzioni di tutte le squadre (squadre e missioni restano); "SVUOTA FOTO E VIDEO" elimina
+  i file di prova dallo Storage (via Storage API: Supabase vieta di cancellarli da SQL). Entrambi
+  chiedono una **doppia conferma**: prima si scrive la parola (RESET / ELIMINA), poi un'ultima conferma
+  con il riepilogo di cosa si perde. Dopo il reset il gioco propone di eliminare anche le prove.
+  Il registro delle azioni non viene cancellato.
 - **Esportazione** (`ProofExport`): uno ZIP per squadra con file dai nomi leggibili + `prove.csv`
   (anche i testi), creato nel browser. Il download dei file usa un header `x-admin-pin` che la
   policy dello Storage verifica nel DB: **da provare con `db:start` e un upload vero prima della

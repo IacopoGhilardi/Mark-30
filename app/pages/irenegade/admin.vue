@@ -12,6 +12,7 @@ const error = ref('')
 const busy = ref(false)
 const now = ref(Date.now())
 const updatedAt = ref('')
+const notice = ref('')
 
 type Inputs = { assign: number | null; cancel: number | null; delta: number | null; sign: 1 | -1; reason: string }
 const inputs = reactive<Record<number, Inputs>>({})
@@ -65,8 +66,12 @@ async function run(action: () => Promise<unknown>, loaderText: string) {
   try {
     await withLoader(action, loaderText)
     await refresh({ silent: true })
+
+    return true
   } catch (e) {
     error.value = errorMessage(e)
+
+    return false
   } finally {
     busy.value = false
   }
@@ -116,10 +121,58 @@ function resetTeam(team: AdminTeam) {
   return run(() => adminResetTeam(session.pin.value, team.teamId), 'AZZERO...')
 }
 
-function resetGame() {
-  const answer = prompt('Azzera TUTTE le squadre. Scrivi RESET per confermare.')
-  if (answer === null) return
-  return run(() => adminResetGame(session.pin.value, answer), 'AZZERO TUTTO...')
+// Doppia conferma per ciò che non si può annullare: prima si scrive la parola,
+// poi un'ultima conferma con il riepilogo di quanto si sta per perdere.
+function confirmTwice(word: string, intro: string, summary: string) {
+  const typed = prompt(`${intro}\n\nScrivi ${word} per continuare.`)
+
+  if (typed === null) return false
+
+  if (typed.trim().toUpperCase() !== word) {
+    error.value = `Conferma non valida: scrivi ${word}.`
+    return false
+  }
+
+  return confirm(`ULTIMA CONFERMA\n\n${summary}\n\nNon si torna indietro. Procedo?`)
+}
+
+async function clearProofs() {
+  error.value = ''
+  notice.value = ''
+
+  const stats = await adminStorageStats(session.pin.value).catch(() => null)
+
+  if (!confirmTwice('ELIMINA', 'Elimina le foto e i video dei test.', clearSummary(stats))) return
+
+  return run(async () => {
+    const removed = await adminClearProofs(session.pin.value)
+    notice.value = `Eliminati ${removed} file.`
+  }, 'ELIMINO FOTO E VIDEO...')
+}
+
+async function resetGame() {
+  error.value = ''
+  notice.value = ''
+
+  if (!overview.value) return
+
+  const confirmed = confirmTwice(
+    'RESET',
+    'Azzera il gioco di tutte le squadre. Squadre e missioni restano.',
+    resetSummary(overview.value.teams)
+  )
+
+  if (!confirmed) return
+
+  const done = await run(() => adminResetGame(session.pin.value, 'RESET'), 'AZZERO TUTTO...')
+
+  if (!done) return
+
+  notice.value = 'Gioco azzerato. Foto e video sono rimasti nello Storage.'
+
+  if (confirm('Gioco azzerato. Vuoi eliminare anche le foto e i video caricati?')) {
+    await clearProofs()
+  }
 }
 
 async function loadLog() {
@@ -171,6 +224,7 @@ onBeforeUnmount(() => clearInterval(refreshTimer))
       </div>
 
       <p v-if="error" class="adm-error" role="alert">{{ error }}</p>
+      <p v-if="notice" class="adm-on" role="status" style="margin: 12px 0">{{ notice }}</p>
 
       <section class="adm-section">
         <h2>SPAZIO</h2>
@@ -289,7 +343,11 @@ onBeforeUnmount(() => clearInterval(refreshTimer))
 
       <section class="adm-section">
         <h2>ZONA PERICOLOSA</h2>
-        <button class="adm-btn danger" type="button" :disabled="busy" @click="resetGame">AZZERA TUTTO IL GIOCO</button>
+        <div class="adm-grid">
+          <button class="adm-btn danger" type="button" :disabled="busy" @click="resetGame">AZZERA TUTTO IL GIOCO</button>
+          <button class="adm-btn danger" type="button" :disabled="busy" @click="clearProofs">SVUOTA FOTO E VIDEO</button>
+          <p class="adm-muted">Prima della festa: azzera il gioco e svuota le prove dei test. Squadre e missioni restano.</p>
+        </div>
       </section>
 
       <button class="adm-btn" type="button" @click="logout">ESCI</button>
