@@ -30,7 +30,10 @@ direttamente (RLS attiva, nessuna policy per `anon`): parla solo con funzioni Po
 (RPC) che applicano le regole.
 
 - **Una sola missione attiva per squadra**, garantita da un indice unico.
-- **Nessuna missione ripetuta**: `unique (team_id, mission_id)`.
+- **Nessuna missione ripetuta**: `unique (team_id, mission_id)`. Completate e scartate
+  non tornano finché ci sono missioni nuove; finite quelle, la squadra può farsi
+  riassegnare una scartata (a caso o scegliendola).
+- **Salto**: nessuna penalità, nessun limite oltre alle missioni disponibili.
 - **Punti decisi dal server**, letti dalla missione, mai inviati dal client.
 - **Completamento idempotente**: un secondo invio non assegna di nuovo i punti.
 - **Prove** (foto/video) in un bucket Storage privato, collegate a squadra e missione.
@@ -49,6 +52,8 @@ Funzioni:
 | `get_team_state(team_id)` | Stato della squadra: punteggio, missione attiva, completate |
 | `draw_mission(team_id)` | Restituisce la missione attiva o ne assegna una a caso |
 | `complete_mission(team_id, mission_id, proof_text, proof_path)` | Chiude la missione e assegna i punti |
+| `skip_mission(team_id, mission_id)` | Salta la missione attiva e ne assegna subito una nuova |
+| `redraw_skipped_mission(team_id, mission_id?)` | Finite le nuove, riassegna una missione scartata |
 | `get_leaderboard()` | Classifica per punti, con posizione |
 | `get_completed_missions(team_id?, limit?)` | Missioni completate con i punti (di una squadra o di tutte) |
 

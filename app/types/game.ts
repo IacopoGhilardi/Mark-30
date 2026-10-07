@@ -10,6 +10,13 @@ export type ActiveMission = {
   requiresMarco: boolean
 }
 
+export type SkippedMission = {
+  id: number
+  title: string
+  category: string
+  points: number
+}
+
 export type TeamState = {
   teamId: number
   name: string
@@ -18,6 +25,13 @@ export type TeamState = {
   step: 'ready' | 'active'
   completedMissionIds: number[]
   activeMission: ActiveMission | null
+  skippedMissions: SkippedMission[]
+  // missioni mai assegnate a questa squadra
+  freshRemaining: number
+  // nessuna nuova e nessuna attiva, ma ci sono scartate da riavere
+  canRedrawSkipped: boolean
+  // nessuna nuova, nessuna attiva, nessuna scartata: ha finito tutto
+  allDone: boolean
 }
 
 export type LeaderboardRow = {

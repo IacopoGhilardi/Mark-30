@@ -3,6 +3,8 @@ import { getTeamState } from '../../app/api/getTeamState'
 import { drawMission } from '../../app/api/drawMission'
 import { getLeaderboard } from '../../app/api/getLeaderboard'
 import { getCompletedMissions } from '../../app/api/getCompletedMissions'
+import { skipMission } from '../../app/api/skipMission'
+import { redrawSkippedMission } from '../../app/api/redrawSkippedMission'
 
 const callRpc = vi.fn()
 
@@ -53,5 +55,24 @@ describe('getCompletedMissions', () => {
   it('accetta teamId 0 senza scartarlo', async () => {
     await getCompletedMissions({ teamId: 0 })
     expect(callRpc).toHaveBeenLastCalledWith('get_completed_missions', { teamId: 0 })
+  })
+})
+
+describe('skipMission', () => {
+  it('passa squadra e missione mostrata', async () => {
+    await skipMission(7, 12)
+    expect(callRpc).toHaveBeenCalledWith('skip_mission', { teamId: 7, missionId: 12 })
+  })
+})
+
+describe('redrawSkippedMission', () => {
+  it('senza missione lascia scegliere al server', async () => {
+    await redrawSkippedMission(7)
+    expect(callRpc).toHaveBeenCalledWith('redraw_skipped_mission', { teamId: 7 })
+  })
+
+  it('con missione sceglie quella', async () => {
+    await redrawSkippedMission(7, 12)
+    expect(callRpc).toHaveBeenCalledWith('redraw_skipped_mission', { teamId: 7, missionId: 12 })
   })
 })
