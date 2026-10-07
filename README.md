@@ -1,6 +1,6 @@
 # Marco's 30th — The Birthday Games
 
-Gioco a squadre per il 30° compleanno di Marco: 9 squadre, 50 missioni da completare
+Gioco a squadre per il 30° compleanno di Marco: 9 squadre, 60 missioni da completare
 con foto, video o testo, classifica live. Ogni squadra gioca da un solo telefono
 (il "Game Phone") scansionando il proprio QR.
 
@@ -47,6 +47,9 @@ direttamente (RLS attiva, nessuna policy per `anon`): parla solo con funzioni Po
 
 Tabelle: `teams`, `missions`, `team_missions` (assegnazione + completion).
 Squadre e missioni sono caricate dalla migration (seed generato da `app/datas/`).
+Se modifichi `app/datas/missions.ts` (testi, punti, tipi di prova, nuove missioni) esegui
+`npm run db:missions`: genera una migration che allinea il DB (inserisce, aggiorna e disattiva
+quelle tolte), poi `npm run db:push`.
 
 Funzioni:
 

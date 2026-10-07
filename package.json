@@ -16,7 +16,8 @@
     "db:reset": "supabase db reset",
     "test:db": "(supabase status >/dev/null 2>&1 || npm run db:start) && npm run db:reset && supabase test db",
     "test": "vitest run",
-    "test:all": "npm test && npm run test:db"
+    "test:all": "npm test && npm run test:db",
+    "db:missions": "node scripts/missions-migration.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
