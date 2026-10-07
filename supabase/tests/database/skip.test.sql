@@ -7,7 +7,8 @@ create temp table ctx as
 select array_agg(id order by id) as ids
   from (select id from public.missions where active order by id limit 3) x;
 
-update public.missions set active = false where id <> all ((select ids from ctx));
+update public.missions set active = false
+ where id not in (select unnest(ids) from ctx);
 
 -- ---------------------------------------------------------------- skip con missioni nuove
 

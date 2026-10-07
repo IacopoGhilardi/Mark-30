@@ -3,7 +3,7 @@
 // Usa sempre il Supabase locale (ignora l'eventuale .env verso il cloud).
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { nuxtEnvFromStatus, parseStatusEnv } from './dev-env.mjs'
+import { isSupabaseRunning, nuxtEnvFromStatus, parseStatusEnv } from './dev-env.mjs'
 
 const DB_URL = 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
 
@@ -23,7 +23,7 @@ function fail(text) {
 // 1. Supabase locale (avvia solo se non è già acceso)
 step('Supabase locale')
 
-if (run('npx', ['supabase', 'status']).status !== 0) {
+if (!isSupabaseRunning(run('npx', ['supabase', 'status', '-o', 'env']).stdout ?? '')) {
   const started = run('npm', ['run', 'db:start'], { stdio: 'inherit' })
 
   if (started.status !== 0) {

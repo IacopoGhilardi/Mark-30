@@ -14,7 +14,7 @@
     "db:start": "supabase start -x gotrue,realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "test:db": "(supabase status >/dev/null 2>&1 || npm run db:start) && npm run db:reset && supabase test db",
+    "test:db": "node scripts/ensure-db.mjs && npm run db:reset && supabase test db",
     "test": "vitest run",
     "test:all": "npm test && npm run test:db",
     "db:missions": "node scripts/missions-migration.mjs",
