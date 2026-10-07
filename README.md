@@ -162,6 +162,11 @@ on conflict (role) do update set pin_hash = excluded.pin_hash;
   assegna un'altra. Le squadre ferme sulla stessa missione da più di 20 minuti sono evidenziate.
 - **Annulla missione completata**: tolgono i punti e la missione torna disponibile. La prova resta
   nello Storage e nel registro.
+- **Spazio** (solo Irene): la dimensione dei file viene letta da `storage.objects` (non si salva
+  nulla di nuovo). Mostra usato/limite con barra, foto e video, file orfani (upload non conclusi o
+  doppi), spazio per squadra e dimensione del database, con avviso dal 70% (giallo) e dal 90%
+  (rosso). Il limite (1 GiB) sta in `game_settings.storage_limit_bytes`: cambialo dal SQL editor se
+  passi a un piano a pagamento. L'export mostra anche il peso di ogni squadra prima dello ZIP.
 - **Esportazione** (`ProofExport`): uno ZIP per squadra con file dai nomi leggibili + `prove.csv`
   (anche i testi), creato nel browser. Il download dei file usa un header `x-admin-pin` che la
   policy dello Storage verifica nel DB: **da provare con `db:start` e un upload vero prima della

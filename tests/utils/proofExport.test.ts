@@ -14,6 +14,7 @@ const row = (overrides: Partial<ProofRow> = {}): ProofRow => ({
   completedAt: '2026-10-10T21:32:00',
   proofText: null,
   proofPath: 'team-3/mission-7-1700000000000.jpg',
+  sizeBytes: 1024,
   ...overrides,
 })
 

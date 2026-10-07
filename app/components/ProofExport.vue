@@ -21,6 +21,7 @@ const teams = computed(() => {
 })
 
 const filesCount = (list: ProofRow[]) => list.filter((row) => row.proofPath).length
+const teamBytes = (list: ProofRow[]) => list.reduce((total, row) => total + (row.sizeBytes ?? 0), 0)
 
 async function load() {
   error.value = ''
@@ -72,7 +73,7 @@ function downloadCsv() {
     <div v-for="team in teams" :key="team.teamId" class="adm-card">
       <div class="adm-row">
         <strong>{{ team.name }}</strong>
-        <span class="adm-muted">{{ team.rows.length }} missioni · {{ filesCount(team.rows) }} file</span>
+        <span class="adm-muted">{{ team.rows.length }} missioni · {{ filesCount(team.rows) }} file · {{ formatBytes(teamBytes(team.rows)) }}</span>
       </div>
       <button class="adm-btn" type="button" :disabled="busyTeam !== null" @click="downloadTeam(team)">
         {{ busyTeam === team.teamId ? `SCARICO ${progress[team.teamId] ?? ''}` : 'SCARICA ZIP' }}

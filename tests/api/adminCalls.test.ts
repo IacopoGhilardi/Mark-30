@@ -11,6 +11,7 @@ import { adminResetTeam } from '../../app/api/adminResetTeam'
 import { adminResetGame } from '../../app/api/adminResetGame'
 import { adminGetLog } from '../../app/api/adminGetLog'
 import { getGameStatus } from '../../app/api/getGameStatus'
+import { adminStorageStats } from '../../app/api/adminStorageStats'
 
 const callAdmin = vi.fn()
 const callRpc = vi.fn()
@@ -79,6 +80,11 @@ describe('funzioni admin', () => {
     await adminGetLog('9999', 10)
     expect(callAdmin).toHaveBeenNthCalledWith(1, 'admin_get_log', '9999', { limit: 50 })
     expect(callAdmin).toHaveBeenNthCalledWith(2, 'admin_get_log', '9999', { limit: 10 })
+  })
+
+  it('adminStorageStats', async () => {
+    await adminStorageStats('9999')
+    expect(callAdmin).toHaveBeenCalledWith('admin_storage_stats', '9999')
   })
 
   it('getGameStatus è pubblico: non usa il PIN', async () => {

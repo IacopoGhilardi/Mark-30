@@ -9,4 +9,5 @@ export type ProofRow = {
   completedAt: string
   proofText: string | null
   proofPath: string | null
+  sizeBytes: number | null
 }

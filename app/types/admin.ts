@@ -27,3 +27,19 @@ export type AdminLogRow = {
   details: Record<string, unknown>
   createdAt: string
 }
+
+export type StorageLevel = 'ok' | 'warning' | 'critical'
+
+export type StorageStats = {
+  limitBytes: number
+  usedBytes: number
+  fileCount: number
+  percent: number
+  level: StorageLevel
+  images: { count: number; bytes: number }
+  videos: { count: number; bytes: number }
+  // file caricati ma non collegati a nessuna missione completata
+  orphans: { count: number; bytes: number }
+  perTeam: { teamId: number; count: number; bytes: number }[]
+  database: { usedBytes: number; limitBytes: number }
+}

@@ -146,6 +146,11 @@ onBeforeUnmount(() => clearInterval(refreshTimer))
       <p v-if="error" class="adm-error" role="alert">{{ error }}</p>
 
       <section class="adm-section">
+        <h2>SPAZIO</h2>
+        <StorageUsage :pin="session.pin.value" />
+      </section>
+
+      <section class="adm-section">
         <h2>GIOCO</h2>
         <GameSwitches :status="overview.status" :busy="busy" @change="setGame" />
       </section>
