@@ -28,12 +28,12 @@ export const teams: Team[] = [
   {
     id: 5,
     name: 'DRAMA TEAM',
-    members: ['Confo', 'Kevin', 'Pozza', 'Azzu', 'Cloe'],
+    members: ['Confo', 'Kevin', 'Pozza', 'Azzu', 'Brian'],
   },
   {
     id: 6,
     name: 'TEAM SOLITI NOTI',
-    members: ['Biancone', 'Gianlu', 'Asia', 'Greta', 'Filippo'],
+    members: ['Biancone', 'Gianlu', 'Asia', 'Greta', 'Cloe'],
   },
   {
     id: 7,
