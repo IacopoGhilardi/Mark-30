@@ -278,7 +278,7 @@ Dopo i test: `/irenegade/admin` > ZONA PERICOLOSA > **AZZERA TUTTO IL GIOCO** e 
 ## Build e deploy (dettagli)
 
 ```bash
-npm run generate   # build statica in .output/public
+npm run generate   # build statica in .output/public (su Netlify il preset la scrive in dist)
 npm run preview
 ```
 
