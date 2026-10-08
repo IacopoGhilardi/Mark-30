@@ -659,7 +659,7 @@ useHead({
         </div>
 
         <div>
-          <span>SCORE</span>
+          <span>PUNTI</span>
           <strong>{{ score }}</strong>
         </div>
 
@@ -674,7 +674,7 @@ useHead({
         class="leaderboard-link"
       >
         <span>
-          🏆 CLASSIFICA LIVE
+          VEDI LA CLASSIFICA LIVE
         </span>
 
         <span>↗</span>
@@ -701,7 +701,7 @@ useHead({
           </div>
 
           <div class="top-stat score">
-            <span>SCORE</span>
+            <span>PUNTI</span>
             <strong>{{ score }}</strong>
           </div>
         </div>
@@ -713,7 +713,7 @@ useHead({
         class="leaderboard-link"
       >
         <span>
-          🏆 CLASSIFICA LIVE
+          VEDI CLASSIFICA LIVE
         </span>
 
         <span>↗</span>
@@ -847,8 +847,8 @@ useHead({
       >
         <div class="mission-meta">
           <span>
-            LEVEL
-            {{ String(missionNumber).padStart(2, '0') }}
+            MISSIONE
+            #{{ String(missionNumber).padStart(2, '0') }}
           </span>
 
           <span
@@ -1107,7 +1107,7 @@ useHead({
           </div>
 
           <p class="completed-label">
-            MISSION CLEAR!
+            MISSIONE COMPLETATA
           </p>
 
           <p class="points-earned">
@@ -1303,36 +1303,23 @@ button {
 
 .leaderboard-link {
   margin-top: 20px;
-  padding: 16px 18px;
+  padding: 12px 0;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  color: #f4f4f0;
-  background: #151515;
-  border: 1px solid #3a3a3a;
-  border-radius: 12px;
+  color: #777;
 
-  font-size: 11px;
+  font-size: 7px;
   font-weight: 950;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.15em;
 
   text-decoration: none;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
 }
 
 .leaderboard-link:hover {
-  background: #1e1e1e;
-  border-color: #f4f4f0;
-}
-
-.leaderboard-link:active {
-  transform: scale(0.98);
+  color: #f4f4f0;
 }
 
 .separator {

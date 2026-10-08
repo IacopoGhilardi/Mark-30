@@ -7,47 +7,47 @@ export type Team = {
 export const teams: Team[] = [
   {
     id: 1,
-    name: 'GLI IMBUCATI',
+    name: 'TEAM 1',
     members: ['Seppia', 'Bata', 'Claudia', 'Nedo', 'Scavo'],
   },
   {
     id: 2,
-    name: 'I SOSPETTI',
+    name: 'TEAM 2',
     members: ['Bartolomei', 'Carmen', 'Nico', 'Aras', 'Andre Grossi'],
   },
   {
     id: 3,
-    name: 'I DIGIUNI',
+    name: 'TEAM 3',
     members: ['Fede Stella', 'Vittoria', 'Bianu', 'marzu', 'Federico Filipp'],
   },
   {
     id: 4,
-    name: 'LOS CLANDESTINOS',
-    members: ['Pasqui', 'Asia Rinzi', 'Ghila', 'Giulia Carni', 'Seminara'],
+    name: 'TEAM 4',
+    members: ['Pasqui', 'Asia Rinzi', 'Ghila', 'Giulia Carni', 'Semi'],
   },
   {
     id: 5,
-    name: 'DRAMA TEAM',
+    name: 'TEAM 5',
     members: ['Confo', 'Kevin', 'Pozza', 'Azzu', 'Cloe'],
   },
   {
     id: 6,
-    name: 'TEAM SOLITI NOTI',
+    name: 'TEAM 6',
     members: ['Biancone', 'Gianlu', 'Asia', 'Greta', 'Filippo'],
   },
   {
     id: 7,
-    name: 'PACCARI TEAM',
+    name: 'TEAM 7',
     members: ['Santamaria', 'Elisa', 'Ire', 'Lupetta', 'Giacomino'],
   },
   {
     id: 8,
-    name: 'TEAM SGAMATI',
+    name: 'TEAM 8',
     members: ['Filippo Morelli', 'Giordana', 'Caramans', 'Ila Pap', 'Trevi'],
   },
   {
     id: 9,
-    name: 'LE RISERVE',
+    name: 'TEAM 9',
     members: ['Gori', 'Giada', 'Daiana', 'Marchino Pref', 'Ciocia'],
   },
 ]
