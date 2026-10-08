@@ -249,13 +249,31 @@ useHead({
         v-if="revealedTeams >= teams.length"
         class="final-message"
       >
+        <div class="final-alert-label">
+          🚨 SQUADRE FORMATE
+        </div>
+
         <p class="final-title">
           TROVATE LA VOSTRA SQUADRA.
         </p>
 
-        <p>
-          Scegliete un telefono.<br>
-          Da questo momento giocate insieme.
+        <p class="final-copy">
+          Raggiungete gli altri membri del team.
+        </p>
+
+        <div class="game-phone-alert">
+          <span class="game-phone-icon">📱</span>
+
+          <div>
+            <strong>SCEGLIETE UN SOLO TELEFONO.</strong>
+            <p>
+              Sarà il vostro GAME PHONE per tutta la partita.
+            </p>
+          </div>
+        </div>
+
+        <p class="final-together">
+          DA QUESTO MOMENTO GIOCATE INSIEME.
         </p>
       </div>
     </section>
@@ -531,20 +549,92 @@ button {
 
 .final-message {
   margin-top: 45px;
-  padding-top: 28px;
-  border-top: 1px solid #333;
+  padding: 24px 20px;
 
-  color: #888;
-  font-size: 14px;
-  line-height: 1.55;
+  color: #f4f4f0;
+  background: #151515;
+  border: 2px solid #f4f4f0;
+  border-radius: 16px;
+
+  text-align: center;
+  box-shadow: 0 0 0 4px #000;
+}
+
+.final-alert-label {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 7px 10px;
+
+  background: #f4f4f0;
+  color: #0a0a0a;
+
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.14em;
 }
 
 .final-title {
-  margin: 0 0 12px;
+  margin: 0;
+
   color: #f4f4f0;
-  font-size: 15px;
+  font-size: clamp(27px, 8vw, 40px);
   font-weight: 950;
-  letter-spacing: 0.06em;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.final-copy {
+  margin: 14px 0 24px;
+
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.game-phone-alert {
+  padding: 18px 14px;
+
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  background: #f4f4f0;
+  color: #0a0a0a;
+  border-radius: 10px;
+
+  text-align: left;
+}
+
+.game-phone-icon {
+  flex: 0 0 auto;
+  font-size: 28px;
+}
+
+.game-phone-alert strong {
+  display: block;
+
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+}
+
+.game-phone-alert p {
+  margin: 6px 0 0;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.final-together {
+  margin: 22px 0 0;
+
+  color: #f4f4f0;
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
 }
 
 .team-reveal-enter-active {
