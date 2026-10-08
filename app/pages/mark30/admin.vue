@@ -57,6 +57,11 @@ onMounted(async () => {
     <AdminPinForm v-if="!status" :busy="busy" :error="error" @submit="enter" />
 
     <template v-else>
+      <section v-if="status.phoneUnlockCode" class="adm-section">
+        <h2>CODICE DEL TUO TELEFONO</h2>
+        <p class="unlock-code" aria-label="Codice di sblocco del telefono">{{ status.phoneUnlockCode }}</p>
+      </section>
+
       <section class="adm-section">
         <h2>GIOCO</h2>
         <GameSwitches :status="status" :busy="busy" @change="change" />
@@ -79,3 +84,16 @@ onMounted(async () => {
     </template>
   </AdminShell>
 </template>
+
+<style scoped>
+.unlock-code {
+  margin: 0;
+  padding: 18px 12px;
+  border: 1px solid #f4f4f0;
+  text-align: center;
+  font-size: 34px;
+  font-weight: 950;
+  letter-spacing: 0.3em;
+  user-select: all;
+}
+</style>

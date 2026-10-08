@@ -184,6 +184,13 @@ insert into public.admin_pins (role, pin_hash) values
 on conflict (role) do update set pin_hash = excluded.pin_hash;
 ```
 
+Il codice di sblocco del telefono di Marco sta nel DB (non nel codice, che è pubblico) e compare
+nella sua pagina admin solo dopo il PIN. Impostalo o cambialo dal SQL editor; `null` lo nasconde:
+
+```sql
+update public.game_settings set phone_unlock_code = '123456' where id = 1;
+```
+
 - **Pausa**: "Gioco" fermo blocca estrazioni, salti e completamenti; "Nuove missioni" ferme blocca
   solo estrazioni e salti. Le azioni di Irene funzionano anche in pausa. Le pagine di gioco
   leggono lo stato con `getGameStatus()`.

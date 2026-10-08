@@ -1,6 +1,8 @@
 export type GameStatus = {
   missionsEnabled: boolean
   playEnabled: boolean
+  // solo nelle risposte admin (mai nello stato pubblico)
+  phoneUnlockCode?: string | null
 }
 
 export type AdminTeam = {

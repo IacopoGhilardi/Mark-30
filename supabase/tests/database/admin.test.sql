@@ -47,7 +47,7 @@ select is(
 select public.draw_mission(2);  -- squadra 2 ha una missione attiva
 
 select is(
-  public.admin_set_game('1111', false, true) -> 'data', '{"missionsEnabled": false, "playEnabled": true}'::jsonb,
+  (public.admin_set_game('1111', false, true) -> 'data') - 'phoneUnlockCode'::text, '{"missionsEnabled": false, "playEnabled": true}'::jsonb,
   'Marco ferma le nuove missioni'
 );
 select throws_ok($$ select public.draw_mission(1) $$, '55000', 'missions_paused', 'con le missioni ferme draw_mission è rifiutata');
@@ -202,6 +202,13 @@ select is(
   (select file_size_limit from storage.buckets where id = 'proofs'), 20971520::bigint,
   'limite del bucket: 20 MB'
 );
+
+-- codice di sblocco del telefono: solo con il PIN, mai nello stato pubblico
+update public.game_settings set phone_unlock_code = '246810' where id = 1;
+select is(public.admin_get_status('1111') -> 'data' ->> 'phoneUnlockCode', '246810', 'Marco vede il codice del telefono');
+select is(public.admin_get_status('0000') ->> 'error', 'invalid_pin', 'senza PIN il codice non esce');
+select is(public.get_game_status() ? 'phoneUnlockCode', false, 'lo stato pubblico non contiene il codice');
+select is(public.admin_set_game('1111', true, true) -> 'data' ->> 'phoneUnlockCode', '246810', 'il codice resta dopo set_game');
 
 -- ---------------------------------------------------------------- blocco dei tentativi (sempre per ultimo)
 
